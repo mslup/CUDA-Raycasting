@@ -1,0 +1,10 @@
+https://dcgi.fel.cvut.cz/home/havran/ARTICLES/cgf2011.pdf
+https://www.researchgate.net/publication/257571726_Understanding_the_Efficiency_of_kD-tree_Ray-Traversal_Techniques_over_a_GPGPU_Architecture
+https://www.johannes-guenther.net/StacklessGPURT/StacklessGPURT.pdf
+https://www.irisa.fr/prive/kadi/Sujets_CTR/kadi/Kadi_sujet2_article_Kdtree.pdf
+https://www.cg.tuwien.ac.at/studentwork/VisFoSe98/jiri/index.htm
+https://sci-hub.se/https://dl.acm.org/doi/10.1145/2503210.2503223?fbclid=IwAR19yQVdaSHTlr0u9zvjdklbJ3xEeY0w3CUAolsxvSlf63QSMPFBD2viTY4
+https://developer.nvidia.com/blog/thinking-parallel-part-i-collision-detection-gpu/
+https://www.youtube.com/watch?v=TrqK-atFfWY&ab_channel=JustinSolomon
+https://developer.nvidia.com/blog/thinking-parallel-part-iii-tree-construction-gpu/
+https://developer.nvidia.com/blog/thinking-parallel-part-ii-tree-traversal-gpu/

@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34322.80
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "peo2", "peo2.vcxproj", "{8BA31143-AA30-4236-A1A2-E2B365CE5056}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8BA31143-AA30-4236-A1A2-E2B365CE5056}.Debug|x64.ActiveCfg = Debug|x64
+		{8BA31143-AA30-4236-A1A2-E2B365CE5056}.Debug|x64.Build.0 = Debug|x64
+		{8BA31143-AA30-4236-A1A2-E2B365CE5056}.Release|x64.ActiveCfg = Release|x64
+		{8BA31143-AA30-4236-A1A2-E2B365CE5056}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0AD6220D-6107-4FC6-8E71-FC1D80E4E45C}
+	EndGlobalSection
+EndGlobal
