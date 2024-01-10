@@ -29,7 +29,12 @@ void Renderer::render()
 	{
 		for (int j = 0; j < width; j++)
 		{
-			imageData[i * width + j] = perPixel(i, j);
+			glm::vec2 coord = glm::vec2{
+				2.0f * (1.0f * i / height) - 1.0f,
+				2.0f * (1.0f * j / width) - 1.0f
+			};
+
+			imageData[i * width + j] = rayGen(coord);
 		}
 	}
 }
@@ -39,12 +44,47 @@ GLuint* Renderer::getImage()
 	return imageData;
 }
 
-GLuint Renderer::perPixel(int i, int j)
+GLuint Renderer::toRGBA(glm::vec4& color)
 {
-	unsigned char r = (1.0 * i / height) * 255;
-	unsigned char g = 0x00;
-	unsigned char b = (1.0 * j / width) * 255;
-	unsigned char a = 0xff;
+	unsigned char r = color.r * 255.0f;
+	unsigned char g = color.g * 255.0f;
+	unsigned char b = color.b * 255.0f;
+	unsigned char a = color.a * 255.0f;
 
 	return (r << 24) | (g << 16) | (b << 8) | a;
+}
+
+GLuint Renderer::rayGen(glm::vec2& coord)
+{
+	float x = coord.x;
+	float y = coord.y;
+	float z = 2.0f;
+
+	glm::vec3 rayOrigin(x, y, z); // x = y = 0 for perspective
+	glm::vec3 rayDirection(x, y, -1.0f);
+	rayDirection = glm::normalize(rayDirection);
+
+	float radius = 0.5f;
+
+	float a = glm::dot(rayDirection, rayDirection);
+	float b = 2.0f * glm::dot(rayOrigin, rayDirection);
+	float c = glm::dot(rayOrigin, rayOrigin) - radius * radius;
+
+	float delta = b * b - 4.0f * a * c;
+	if (delta < 0)
+		return 0xb8a9a9ff;
+
+	float t = (-b - glm::sqrt(delta)) / (2.0f * a);
+
+	//glm::vec3 hitPoint = rayOrigin + rayDirection * t;
+	glm::vec3 normal = glm::normalize(rayOrigin + rayDirection * t);
+
+	glm::vec3 lightDir = glm::normalize(glm::vec3(-1, -1, -1));
+	float lightIntensity = glm::max(glm::dot(normal, -lightDir), 0.0f);
+
+	glm::vec3 sphereColor(1, 0, 1);
+	sphereColor *= lightIntensity;
+		
+	return toRGBA(glm::vec4(sphereColor, 1.0f));
+
 }

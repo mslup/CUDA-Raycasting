@@ -112,7 +112,6 @@ void Application::createTexture()
 	glCreateTextures(GL_TEXTURE_2D, 1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
-	//glTextureStorage2D(texture, 1, GL_RGBA8, WIDTH, HEIGHT);
 	textureResizeStorage(WIDTH, HEIGHT);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -120,7 +119,7 @@ void Application::createTexture()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	glBindTextureUnit(0, texture);
+	//glBindTextureUnit(0, texture);
 	glActiveTexture(0);
 }
 
@@ -155,8 +154,6 @@ void Application::imGuiFrame(int fps)
 
 void Application::textureResizeStorage(int width, int height)
 {
-	//glTextureStorage2D(texture, 1, GL_RGBA8, width, height);
-
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height,
 		0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, NULL);
 }

@@ -13,5 +13,6 @@ public:
 private:
 	GLuint* imageData;
 
-	GLuint perPixel(int i, int j);
+	GLuint toRGBA(glm::vec4&);
+	GLuint rayGen(glm::vec2& coord);
 };
