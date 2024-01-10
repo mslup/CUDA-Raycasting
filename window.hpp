@@ -15,5 +15,4 @@ private:
 
 	bool firstMouse = true;
 	float lastX, lastY;
-	float yaw, pitch;
 };

@@ -87,7 +87,6 @@
     <CudaCompile Include="main.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\pro1\ryb%27s\window.hpp" />
     <ClInclude Include="application.hpp" />
     <ClInclude Include="dependencies\include\glad\glad.h" />
     <ClInclude Include="dependencies\include\ImGUI\imconfig.h" />
@@ -101,10 +100,10 @@
     <ClInclude Include="dependencies\include\ImGUI\imstb_textedit.h" />
     <ClInclude Include="dependencies\include\ImGUI\imstb_truetype.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="shader.hpp" />
     <ClInclude Include="window.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\pro1\ryb%27s\window.cpp" />
     <ClCompile Include="application.cpp" />
     <ClCompile Include="dependencies\include\ImGUI\imgui.cpp" />
     <ClCompile Include="dependencies\include\ImGUI\imgui_demo.cpp" />
@@ -116,6 +115,10 @@
     <ClCompile Include="dependencies\include\ImGUI\imgui_widgets.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vertex.glsl" />
+    <None Include="fragment.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

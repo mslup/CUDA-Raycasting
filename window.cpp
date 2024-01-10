@@ -11,14 +11,14 @@ Window::Window(Application *parent)
 	lastY = height / 2;
 
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
-	wndptr = glfwCreateWindow(width, height, "Shoal of fish", NULL, NULL);
+	wndptr = glfwCreateWindow(width, height, "Raycasting of spheres", NULL, NULL);
 	if (wndptr == NULL)
 	{
 		std::cout << "Failed to create a window\n";
@@ -26,10 +26,13 @@ Window::Window(Application *parent)
 	}
 	glfwMakeContextCurrent(wndptr);
 
+
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cout << "Failed to initalize GLAD" << std::endl;
 	}
+
+	std::cout << reinterpret_cast<const char*>(glGetString(GL_VERSION)) << std::endl;
 
 	glViewport(0, 0, width, height);
 	glEnable(GL_DEPTH_TEST);
