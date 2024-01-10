@@ -100,6 +100,7 @@
     <ClInclude Include="dependencies\include\ImGUI\imstb_textedit.h" />
     <ClInclude Include="dependencies\include\ImGUI\imstb_truetype.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="renderer.hpp" />
     <ClInclude Include="shader.hpp" />
     <ClInclude Include="window.hpp" />
   </ItemGroup>
@@ -114,6 +115,7 @@
     <ClCompile Include="dependencies\include\ImGUI\imgui_tables.cpp" />
     <ClCompile Include="dependencies\include\ImGUI\imgui_widgets.cpp" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="renderer.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>

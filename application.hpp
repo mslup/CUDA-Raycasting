@@ -12,14 +12,16 @@ public:
 	constexpr static int HEIGHT = 800;
 
 	void run();
+	void resize(int width, int height);
 
 
 	//unsigned char texture[WIDTH][HEIGHT][3];
 
 private:
-	unsigned int* data;
 	Window* window;
 	Shader* shader;
+	Renderer* renderer;
+
 	unsigned int texture;
 
 	double deltaTime;
@@ -30,4 +32,6 @@ private:
 	void createBuffers();
 	void imGuiFrame(int);
 	void renderScene();
+
+	void textureResizeStorage(int width, int height);
 };

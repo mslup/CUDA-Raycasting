@@ -19,6 +19,7 @@
 #include "ImGUI/imgui_impl_opengl3.h"
 
 #include "shader.hpp"
+#include "renderer.hpp"
 #include "application.hpp"
 #include "window.hpp"
 

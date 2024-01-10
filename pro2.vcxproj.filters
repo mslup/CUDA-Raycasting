@@ -37,6 +37,7 @@
     <ClInclude Include="dependencies\include\ImGUI\imconfig.h" />
     <ClInclude Include="window.hpp" />
     <ClInclude Include="shader.hpp" />
+    <ClInclude Include="renderer.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ImGUI">
@@ -71,6 +72,7 @@
     <ClCompile Include="application.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="window.cpp" />
+    <ClCompile Include="renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="vertex.glsl" />

@@ -39,7 +39,6 @@ Window::Window(Application *parent)
 	glDepthMask(GL_TRUE);
 	glDepthFunc(GL_LESS);
 
-
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
@@ -48,7 +47,20 @@ Window::Window(Application *parent)
 	ImGui_ImplGlfw_InitForOpenGL(wndptr, true);
 	ImGui_ImplOpenGL3_Init();
 
-	glEnable(GL_MULTISAMPLE);
+	//glEnable(GL_MULTISAMPLE);
+
+	glfwSetWindowUserPointer(wndptr, this);
+	glfwSetFramebufferSizeCallback(wndptr,
+		[](GLFWwindow* window, int width, int height)
+		{
+			Window& wnd = *(Window*)glfwGetWindowUserPointer(window);
+			wnd.width = width;
+			wnd.height = height;
+
+			glViewport(0, 0, width, height);
+
+			wnd.app->resize(width, height);
+		});
 }
 
 

@@ -1,34 +1,27 @@
 #include "framework.h"
 
-#include <stdio.h> 
-#include <stdlib.h>
-#include <time.h> 
-
 Application::Application()
 {
 	window = new Window(this);
 	shader = new Shader("vertex.glsl", "fragment.glsl");
+	renderer = new Renderer(WIDTH, HEIGHT);
+
 	deltaTime = 0;
-
-	data = new unsigned int[WIDTH * HEIGHT + 1];
-
 }
 
 Application::~Application()
 {
-	delete[] data;
-
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 	glfwTerminate();
-
 }
 
 void Application::run()
 {
 	createBuffers();
 
+	shader->use();
 	glfwSwapInterval(0);
 
 	int num_frames = 0;
@@ -55,9 +48,10 @@ void Application::run()
 
 		imGuiFrame(fps);
 
-		glClearColor(0,0,0, 1.0f);
+		glClearColor(0, 0, 0, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		shader->use();
 		renderScene();
 		//calculate and render shit
 
@@ -67,6 +61,12 @@ void Application::run()
 		glfwSwapBuffers(window->wndptr);
 		glfwPollEvents();
 	}
+}
+
+void Application::resize(int width, int height)
+{
+	textureResizeStorage(width, height);
+	renderer->resize(width, height);
 }
 
 void Application::createBuffers()
@@ -110,65 +110,27 @@ void Application::createBuffers()
 void Application::createTexture()
 {
 	glCreateTextures(GL_TEXTURE_2D, 1, &texture);
-	glTextureStorage2D(texture, 1, GL_RGBA8, WIDTH, HEIGHT);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	//glTextureStorage2D(texture, 1, GL_RGBA8, WIDTH, HEIGHT);
+	textureResizeStorage(WIDTH, HEIGHT);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	for (int i = 0; i < HEIGHT; i++)
-	{
-		for (int j = 0; j < WIDTH; j++)
-		{
-			//unsigned char r = i;//(unsigned char)(((1.0 * i) / HEIGHT) * 0xff);//rand() % 0xff;
-			//unsigned char g = (unsigned char)(((1.0 * j) / WIDTH) * 0xff);//rand() % 0xff;
-			//unsigned char b = 0; //rand() % 0xff;
-			//unsigned char a = 0xff;
-			//
-			//data[i * WIDTH + j] = (r << 24) | (g << 16) | (b << 8) | a;
-			data[i * WIDTH + j] = 0xff00ffff;
-		}
-	}
-
-	for (int i = 50; i < 150; i++)
-	{
-		for (int j = 50; j < 150; j++)
-		{
-			data[i * WIDTH + j] = 0x000000ff;
-		}
-	}
-
-	data[0] = 0xff;
-
-
-	glTextureSubImage2D(texture, 0, 0, 0, WIDTH, HEIGHT, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
-
 	glBindTextureUnit(0, texture);
+	glActiveTexture(0);
 }
 
 void Application::renderScene()
 {
 	shader->use();
-
-	srand(time(NULL));
-
-	for (int i = 0; i < HEIGHT; i++)
-	{
-		for (int j = 0; j < WIDTH; j++)
-		{
-			unsigned char r =rand() % 0xff;;// (unsigned char)((1.0 * i / HEIGHT) * 0xff);//rand() % 0xff;
-			unsigned char g =rand() % 0xff;;// (unsigned char)((1.0 * j / WIDTH) * 0xff); //rand() % 0xff;
-			unsigned char b = rand() % 0xff;
-			unsigned char a = 0xff;
-
-			data[i * WIDTH + j] = (r << 24) | (g << 16) | (b << 8) | a;
-
-			//std::cout << (int)r << " " << (int)g << " " << (int)b << std::endl;
-		}
-	}
-	glTextureSubImage2D(texture, 0, 0, 0, WIDTH, HEIGHT, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
-
+	renderer->render();
+	glTextureSubImage2D(texture, 0, 0, 0,
+		renderer->width, renderer->height, GL_RGBA,
+		GL_UNSIGNED_INT_8_8_8_8, renderer->getImage());
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
@@ -185,12 +147,16 @@ void Application::imGuiFrame(int fps)
 	}
 
 	ImGui::PushItemWidth(-ImGui::GetWindowWidth() * 0.45f);
-	//ImGui::PushItemWidth(ImGui::GetFontSize() * -6);
 
 	ImGui::Text("%d fps", fps);
-
-	ImGui::Image((void*)0, ImVec2(40, 40));
 
 	ImGui::End();
 }
 
+void Application::textureResizeStorage(int width, int height)
+{
+	//glTextureStorage2D(texture, 1, GL_RGBA8, width, height);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height,
+		0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, NULL);
+}
