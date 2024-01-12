@@ -57,9 +57,9 @@ Window::Window(Application *parent)
 			wnd.width = width;
 			wnd.height = height;
 
-			glViewport(0, 0, width, height);
-
 			wnd.app->resize(width, height);
+
+			glViewport(0, 0, width, height);
 		});
 }
 
@@ -69,4 +69,24 @@ void Window::processInput()
 	if (glfwGetKey(wndptr, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(wndptr, true);
 
+	constexpr int len = 11;
+	int cameraPosKeys[len] = {
+		GLFW_KEY_W,
+		GLFW_KEY_S,
+		GLFW_KEY_A,
+		GLFW_KEY_D,
+		GLFW_KEY_SPACE,
+		GLFW_KEY_LEFT_SHIFT,
+		GLFW_KEY_Q,
+		GLFW_KEY_E,
+		GLFW_KEY_1,
+		GLFW_KEY_3,
+		GLFW_KEY_F
+	};
+
+	for (int i = 0; i < len; i++)
+	{
+		if (glfwGetKey(wndptr, cameraPosKeys[i]) == GLFW_PRESS)
+			app->processKeyboard(cameraPosKeys[i]);
+	}
 }

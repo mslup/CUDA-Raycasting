@@ -15,34 +15,74 @@ Camera::Camera(int width, int height, float left, float right, float bottom, flo
 
 	position = glm::vec3(0.0f, 0.0f, -3.0f);
 
+	speed = 0.5f;
+
 	calculateProjMatrix();
 	calculateViewMatrix();
 
-	calculateRayDirections(1);
+	calculateRayDirections();
 }
 
-const std::vector<glm::vec3>& Camera::getOrthographicRayOrigins()
+void Camera::onResize(int width, int height)
+{
+	if (viewportWidth == width && viewportHeight == height)
+		return;
+
+	viewportWidth = width;
+	viewportHeight = height;
+
+	float aspectRatio = (float)width / (float)height;
+	bottom = -aspectRatio;
+	top = aspectRatio;
+
+	calculateProjMatrix();
+}
+
+void Camera::onUpdate(int key, float deltaTime)
+{
+	switch (key)
+	{
+	case GLFW_KEY_D:
+		position.x += speed * deltaTime;
+		break;
+	case GLFW_KEY_A:
+		position.x -= speed * deltaTime;
+		break;
+	case GLFW_KEY_SPACE:
+		position.y += speed * deltaTime;
+		break;
+	case GLFW_KEY_LEFT_SHIFT:
+		position.y -= speed * deltaTime;
+		break;
+	case GLFW_KEY_S:
+		position.z -= speed * deltaTime;
+		break;
+	case GLFW_KEY_W:
+		position.z += speed * deltaTime;
+		break;
+	}
+}
+
+std::vector<glm::vec3>& Camera::getOrthographicRayOrigins()
 {
 	return rayOrigins;
 }
 
-const std::vector<glm::vec3>& Camera::getRayDirections()
+std::vector<glm::vec3>& Camera::getRayDirections()
 {
 	return rayDirections;
 }
 
-void Camera::calculateRayDirections(float deltaTime)
+void Camera::calculateRayDirections()
 {
 	rayOrigins.resize(viewportWidth * viewportHeight);
 	rayDirections.resize(viewportWidth * viewportHeight);
 
 	calculateViewMatrix();
 
-	//std::cout << glm::to_string(viewMatrix) << std::endl;
-
-	for (int i = 0; i < viewportWidth; ++i)
+	for (int i = 0; i < viewportHeight; ++i)
 	{
-		for (int j = 0; j < viewportHeight; ++j)
+		for (int j = 0; j < viewportWidth; ++j)
 		{
 			glm::vec2 coord{
 				(float)i / viewportHeight,
@@ -64,8 +104,6 @@ void Camera::calculateRayDirections(float deltaTime)
 			rayDirections[i * viewportWidth + j] = rayDirection;
 		}
 	}
-	std::cout << glm::to_string(rayOrigins[0]) << std::endl;
-	std::cout << glm::to_string(rayDirections[0]) << std::endl<<std::endl;
 }
 
 void Camera::calculateProjMatrix()

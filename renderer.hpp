@@ -6,13 +6,13 @@ public:
 	Renderer(int width, int height);
 	~Renderer();
 	void resize(int width, int height);
+	void processKeyboard(int key, float dTime);
 	void render(float deltaTime);
 	GLuint* getImage();
 	int width, height;
 
-	Camera* camera;
 private:
-
+	Camera* camera;
 	GLuint* imageData;
 
 	GLuint toRGBA(glm::vec4&);

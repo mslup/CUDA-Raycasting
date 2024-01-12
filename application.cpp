@@ -149,7 +149,7 @@ void Application::imGuiFrame(int fps)
 
 	ImGui::Text("%d fps", fps);
 
-	ImGui::DragFloat3("Camera pos", glm::value_ptr(renderer->camera->position), 0.01f, -0.5f, 0.5f);
+	//ImGui::DragFloat3("Camera pos", glm::value_ptr(renderer->camera->position), 0.01f, -0.5f, 0.5f);
 
 	ImGui::End();
 }
@@ -158,4 +158,9 @@ void Application::textureResizeStorage(int width, int height)
 {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height,
 		0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, NULL);
+}
+
+void Application::processKeyboard(int key)
+{
+	
 }

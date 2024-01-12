@@ -7,9 +7,9 @@
 Renderer::Renderer(int width, int height)
 {
 	imageData = nullptr;
-	resize(width, height);
 
 	camera = new Camera(width, height);
+	resize(width, height);
 }
 
 Renderer::~Renderer()
@@ -27,13 +27,12 @@ void Renderer::resize(int width, int height)
 		delete [] imageData;
 
 	imageData = new GLuint[width * height + 1];
+	camera->onResize(width, height);
 }
 
 void Renderer::render(float deltaTime)
 {
-	camera->calculateRayDirections(deltaTime);
-
-	//radius = glm::sin(glfwGetTime()) / 2.0f + 0.5f;
+	camera->calculateRayDirections();
 
 	srand(time(NULL));
 
@@ -46,8 +45,6 @@ void Renderer::render(float deltaTime)
 		horizontalIter[i] = i;
 	for (uint32_t i = 0; i < height; i++)
 		verticalIter[i] = i;
-
-	//std::cout << glm::to_string(camera->getOrthographicRayOrigins()[0]) << std::endl;
 
 	std::for_each(std::execution::par, verticalIter.begin(), verticalIter.end(),
 		[this, deltaTime, horizontalIter](uint32_t y)
@@ -88,8 +85,6 @@ GLuint Renderer::rayGen(int i, int j, float deltaTime)
 	glm::vec3 rayOrigin = camera->getOrthographicRayOrigins()[i * width + j];
 	glm::vec3 rayDirection = camera->getRayDirections()[i * width + j];
 
-	
-
 	//std::cout << radius << std::endl;
 
 	float a = glm::dot(rayDirection, rayDirection);
@@ -113,4 +108,9 @@ GLuint Renderer::rayGen(int i, int j, float deltaTime)
 		
 	return toRGBA(glm::vec4(sphereColor, 1.0f));
 
+}
+
+void Renderer::processKeyboard(int key, float deltaTime)
+{
+	camera->onUpdate(key, deltaTime);
 }

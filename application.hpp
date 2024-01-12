@@ -14,7 +14,7 @@ public:
 	void run();
 	void resize(int width, int height);
 
-	//unsigned char texture[WIDTH][HEIGHT][3];
+	void processKeyboard(int key);
 
 private:
 	Window* window;
