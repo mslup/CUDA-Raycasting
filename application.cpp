@@ -1,5 +1,7 @@
 #include "framework.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 Application::Application()
 {
 	window = new Window(this);
@@ -46,14 +48,14 @@ void Application::run()
 			previousFpsTime += 1.0;
 		}
 
-		imGuiFrame(fps);
 
 		glClearColor(0, 0, 0, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		shader->use();
 		renderScene();
+
 		//calculate and render shit
+		imGuiFrame(fps);
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -119,14 +121,12 @@ void Application::createTexture()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	//glBindTextureUnit(0, texture);
 	glActiveTexture(0);
 }
 
 void Application::renderScene()
 {
-	shader->use();
-	renderer->render();
+	renderer->render(deltaTime);
 	glTextureSubImage2D(texture, 0, 0, 0,
 		renderer->width, renderer->height, GL_RGBA,
 		GL_UNSIGNED_INT_8_8_8_8, renderer->getImage());
@@ -148,6 +148,8 @@ void Application::imGuiFrame(int fps)
 	ImGui::PushItemWidth(-ImGui::GetWindowWidth() * 0.45f);
 
 	ImGui::Text("%d fps", fps);
+
+	ImGui::DragFloat3("Camera pos", glm::value_ptr(renderer->camera->position), 0.01f, -0.5f, 0.5f);
 
 	ImGui::End();
 }

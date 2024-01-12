@@ -38,6 +38,7 @@
     <ClInclude Include="window.hpp" />
     <ClInclude Include="shader.hpp" />
     <ClInclude Include="renderer.hpp" />
+    <ClInclude Include="camera.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ImGUI">
@@ -73,6 +74,7 @@
     <ClCompile Include="glad.c" />
     <ClCompile Include="window.cpp" />
     <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="camera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="vertex.glsl" />

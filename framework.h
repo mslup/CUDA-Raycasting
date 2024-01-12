@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <vector>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -18,6 +19,7 @@
 #include "ImGUI/imgui_impl_glfw.h"
 #include "ImGUI/imgui_impl_opengl3.h"
 
+#include "camera.hpp"
 #include "shader.hpp"
 #include "renderer.hpp"
 #include "application.hpp"

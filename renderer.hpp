@@ -6,13 +6,17 @@ public:
 	Renderer(int width, int height);
 	~Renderer();
 	void resize(int width, int height);
-	void render();
+	void render(float deltaTime);
 	GLuint* getImage();
 	int width, height;
 
+	Camera* camera;
 private:
+
 	GLuint* imageData;
 
 	GLuint toRGBA(glm::vec4&);
-	GLuint rayGen(glm::vec2& coord);
+	GLuint rayGen(int i, int j, float);
+
+	float radius = 0.2f;
 };
