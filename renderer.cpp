@@ -47,12 +47,12 @@ void Renderer::render(float deltaTime)
 		verticalIter[i] = i;
 
 	std::for_each(std::execution::par, verticalIter.begin(), verticalIter.end(),
-		[this, deltaTime, horizontalIter](uint32_t y)
+		[this, deltaTime, horizontalIter](uint32_t i)
 		{
 			std::for_each(std::execution::par, horizontalIter.begin(), horizontalIter.end(),
-			[this, y, deltaTime](uint32_t x)
+			[this, i, deltaTime](uint32_t j)
 				{
-					imageData[x + y * width] = rayGen(y, x, deltaTime);
+					imageData[i * width + j] = rayGen(i, j, deltaTime);
 				});
 		});
 
@@ -85,8 +85,6 @@ GLuint Renderer::rayGen(int i, int j, float deltaTime)
 	glm::vec3 rayOrigin = camera->getOrthographicRayOrigins()[i * width + j];
 	glm::vec3 rayDirection = camera->getRayDirections()[i * width + j];
 
-	//std::cout << radius << std::endl;
-
 	float a = glm::dot(rayDirection, rayDirection);
 	float b = 2.0f * glm::dot(rayOrigin, rayDirection);
 	float c = glm::dot(rayOrigin, rayOrigin) - radius * radius;
@@ -100,7 +98,7 @@ GLuint Renderer::rayGen(int i, int j, float deltaTime)
 	//glm::vec3 hitPoint = rayOrigin + rayDirection * t;
 	glm::vec3 normal = glm::normalize(rayOrigin + rayDirection * t);
 
-	glm::vec3 lightDir = glm::normalize(glm::vec3(-1, 0, -1));
+	glm::vec3 lightDir = glm::normalize(glm::vec3(0, 0, -1));
 	float lightIntensity = glm::max(glm::dot(normal, -lightDir), 0.0f);
 
 	glm::vec3 sphereColor(1, 0, 1);

@@ -61,6 +61,8 @@ void Camera::onUpdate(int key, float deltaTime)
 		position.z += speed * deltaTime;
 		break;
 	}
+
+	calculateViewMatrix();
 }
 
 std::vector<glm::vec3>& Camera::getOrthographicRayOrigins()
@@ -85,8 +87,8 @@ void Camera::calculateRayDirections()
 		for (int j = 0; j < viewportWidth; ++j)
 		{
 			glm::vec2 coord{
-				(float)i / viewportHeight,
-				(float)j / viewportWidth
+				(float)j / viewportWidth,
+				(float)i / viewportHeight
 			};
 
 			coord = coord * 2.0f - 1.0f;
@@ -120,5 +122,10 @@ void Camera::calculateViewMatrix()
 		0.0f, 0.0f, 1.0f, 0.0f,
 		-position.x, -position.y, -position.z, 1.0f
 	);
-	inverseViewMatrix = glm::inverse(viewMatrix); //todo
+	inverseViewMatrix = glm::mat4(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		position.x,	position.y, position.z, 1.0f
+	);
 }
