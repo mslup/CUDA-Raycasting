@@ -105,6 +105,7 @@
     <ClInclude Include="dependencies\include\ImGUI\imstb_truetype.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="renderer.hpp" />
+    <ClInclude Include="scene.hpp" />
     <ClInclude Include="shader.hpp" />
     <ClInclude Include="window.hpp" />
   </ItemGroup>

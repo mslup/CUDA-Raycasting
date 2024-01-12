@@ -8,6 +8,8 @@ Renderer::Renderer(int width, int height)
 {
 	imageData = nullptr;
 
+	createScene();
+
 	camera = new Camera(width, height);
 	resize(width, height);
 }
@@ -24,7 +26,7 @@ void Renderer::resize(int width, int height)
 	this->height = height;
 
 	if (imageData != nullptr)
-		delete [] imageData;
+		delete[] imageData;
 
 	imageData = new GLuint[width * height + 1];
 	camera->onResize(width, height);
@@ -70,6 +72,20 @@ GLuint* Renderer::getImage()
 	return imageData;
 }
 
+void Renderer::createScene()
+{
+	scene.spheres.push_back(Sphere{
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		0.5f,
+		glm::vec3(1.0f, 0.0f, 0.0f)
+		});
+	scene.spheres.push_back(Sphere{
+		glm::vec3(0.0f, 0.0f, -1.0f),
+		0.25f,
+		glm::vec3(0.0f, 0.0f, 1.0f)
+		});
+}
+
 GLuint Renderer::toRGBA(glm::vec4& color)
 {
 	unsigned char r = color.r * 255.0f;
@@ -85,30 +101,61 @@ GLuint Renderer::rayGen(int i, int j, float deltaTime)
 	glm::vec3 rayOrigin = camera->getOrthographicRayOrigins()[i * width + j];
 	glm::vec3 rayDirection = camera->getRayDirections()[i * width + j];
 
-	float a = glm::dot(rayDirection, rayDirection);
-	float b = 2.0f * glm::dot(rayOrigin, rayDirection);
-	float c = glm::dot(rayOrigin, rayOrigin) - radius * radius;
+	int hitSphereIndex = -1;
+	Sphere closestSphere;
 
-	float delta = b * b - 4.0f * a * c;
-	if (delta < 0)
+	float minT = FLT_MAX;
+
+	for (int k = 0; k < scene.spheres.size(); k++)
+	{
+		Sphere &sphere = scene.spheres[k];
+
+		glm::vec3 origin = rayOrigin - sphere.center;
+		glm::vec3 direction = rayDirection;
+
+		float a = glm::dot(direction, direction);
+		float b = 2.0f * glm::dot(origin, direction);
+		float c = glm::dot(origin, origin) 
+			- sphere.radius * sphere.radius;
+
+		float delta = b * b - 4.0f * a * c;
+		if (delta < 0)
+			continue;
+
+		float t = (-b - glm::sqrt(delta)) / (2.0f * a);
+
+		if (t> 0 && t < minT)
+		{
+			minT = t;
+			hitSphereIndex = k;
+			closestSphere = sphere;
+		}
+	}
+
+	if (hitSphereIndex == -1)
 		return 0xb8a9a9ff;
 
-	float t = (-b - glm::sqrt(delta)) / (2.0f * a);
-
 	//glm::vec3 hitPoint = rayOrigin + rayDirection * t;
-	glm::vec3 normal = glm::normalize(rayOrigin + rayDirection * t);
+
+	glm::vec3 origin = rayOrigin - closestSphere.center;
+	glm::vec3 position = origin + rayDirection * minT;
+	glm::vec3 normal = glm::normalize(position);
 
 	glm::vec3 lightDir = glm::normalize(glm::vec3(0, 0, -1));
 	float lightIntensity = glm::max(glm::dot(normal, -lightDir), 0.0f);
 
-	glm::vec3 sphereColor(1, 0, 1);
-	sphereColor *= lightIntensity;
-		
-	return toRGBA(glm::vec4(sphereColor, 1.0f));
+	glm::vec3 sphereColor = closestSphere.albedo;
+
+	return toRGBA(glm::vec4(sphereColor * lightIntensity, 1.0f));
 
 }
 
 void Renderer::processKeyboard(int key, float deltaTime)
 {
 	camera->onUpdate(key, deltaTime);
+}
+
+void Renderer::processMouse(glm::vec2 offset, float deltaTime)
+{
+	camera->onMouseUpdate(offset, deltaTime);
 }

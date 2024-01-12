@@ -14,14 +14,17 @@ public:
 
 	void onResize(int width, int height);
 	void onUpdate(int key, float deltaTime);
+	void onMouseUpdate(glm::vec2 offset, float deltaTime);
 
 	glm::vec3 position;
 
 	void calculateRayDirections();
 
-
 private:
-	float speed;
+	float speed, rotationSpeed;
+
+	glm::vec3 forwardDirection, rightDirection, upDirection;
+	const glm::vec3 worldUpDirection = glm::vec3(0.0f, 1.0f, 0.0f);
 
 	float left, right, bottom, top;
 	int viewportWidth, viewportHeight;

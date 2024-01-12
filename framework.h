@@ -19,6 +19,7 @@
 #include "ImGUI/imgui_impl_glfw.h"
 #include "ImGUI/imgui_impl_opengl3.h"
 
+#include "scene.hpp"
 #include "camera.hpp"
 #include "shader.hpp"
 #include "renderer.hpp"

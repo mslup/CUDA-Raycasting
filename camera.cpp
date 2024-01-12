@@ -1,7 +1,8 @@
 #include "framework.h"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 Camera::Camera(int width, int height, float left, float right, float bottom, float top)
 {
@@ -13,9 +14,14 @@ Camera::Camera(int width, int height, float left, float right, float bottom, flo
 	this->bottom = bottom;
 	this->top = top;
 
-	position = glm::vec3(0.0f, 0.0f, -3.0f);
+	position = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	speed = 0.5f;
+	rotationSpeed = 0.05f;
+
+	forwardDirection = glm::vec3(0.0f, 0.0f, -1.0f);
+	rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));
+	upDirection = glm::normalize(glm::cross(forwardDirection, rightDirection));
 
 	calculateProjMatrix();
 	calculateViewMatrix();
@@ -43,26 +49,39 @@ void Camera::onUpdate(int key, float deltaTime)
 	switch (key)
 	{
 	case GLFW_KEY_D:
-		position.x += speed * deltaTime;
+		position += rightDirection * speed * deltaTime;
 		break;
 	case GLFW_KEY_A:
-		position.x -= speed * deltaTime;
+		position -= rightDirection * speed * deltaTime;
 		break;
 	case GLFW_KEY_SPACE:
-		position.y += speed * deltaTime;
+		position += upDirection * speed * deltaTime;
 		break;
 	case GLFW_KEY_LEFT_SHIFT:
-		position.y -= speed * deltaTime;
+		position -= upDirection * speed * deltaTime;
 		break;
 	case GLFW_KEY_S:
-		position.z -= speed * deltaTime;
+		position -= forwardDirection * speed * deltaTime;
 		break;
 	case GLFW_KEY_W:
-		position.z += speed * deltaTime;
+		position += forwardDirection * speed * deltaTime;
 		break;
 	}
 
 	calculateViewMatrix();
+}
+
+void Camera::onMouseUpdate(glm::vec2 offset, float deltaTime)
+{
+	float pitchDelta = offset.y * rotationSpeed;
+	float yawDelta = offset.x * rotationSpeed;
+
+	glm::quat q = glm::normalize(glm::cross(glm::angleAxis(-pitchDelta, rightDirection),
+		glm::angleAxis(-yawDelta, worldUpDirection)));
+
+	forwardDirection = glm::normalize(glm::rotate(q, forwardDirection));
+	rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));
+	upDirection = glm::normalize(glm::cross(forwardDirection, rightDirection));
 }
 
 std::vector<glm::vec3>& Camera::getOrthographicRayOrigins()
@@ -100,8 +119,6 @@ void Camera::calculateRayDirections()
 			glm::vec3 rayDirection = glm::vec3(inverseViewMatrix * glm::vec4(glm::vec3(target), 0)); // World space
 			rayDirection = glm::normalize(rayDirection);
 
-			rayDirection = glm::normalize(rayDirection);
-
 			rayOrigins[i * viewportWidth + j] = rayOrigin;
 			rayDirections[i * viewportWidth + j] = rayDirection;
 		}
@@ -117,15 +134,17 @@ void Camera::calculateProjMatrix()
 void Camera::calculateViewMatrix()
 {
 	viewMatrix = glm::mat4(
+		glm::vec4(rightDirection, 0.0f),
+		glm::vec4(upDirection, 0.0f),
+		glm::vec4(forwardDirection, 0.0f),
+		glm::vec4(-position, 1.0)
+	);
+	inverseViewMatrix = glm::inverse(viewMatrix);
+	
+	/*inverseViewMatrix = glm::mat4(
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
-		-position.x, -position.y, -position.z, 1.0f
-	);
-	inverseViewMatrix = glm::mat4(
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		position.x,	position.y, position.z, 1.0f
-	);
+		position.x, position.y, position.z, 1.0f
+	);*/
 }

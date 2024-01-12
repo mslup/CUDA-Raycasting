@@ -15,6 +15,7 @@ public:
 	void resize(int width, int height);
 
 	void processKeyboard(int key);
+	void processMouse(glm::vec2 offset);
 
 private:
 	Window* window;

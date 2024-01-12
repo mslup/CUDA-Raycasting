@@ -163,3 +163,8 @@ void Application::processKeyboard(int key)
 {
 	renderer->processKeyboard(key, deltaTime);
 }
+
+void Application::processMouse(glm::vec2 offset)
+{
+	renderer->processMouse(offset, deltaTime);
+}

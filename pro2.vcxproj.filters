@@ -39,6 +39,7 @@
     <ClInclude Include="shader.hpp" />
     <ClInclude Include="renderer.hpp" />
     <ClInclude Include="camera.hpp" />
+    <ClInclude Include="scene.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ImGUI">
