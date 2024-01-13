@@ -12,9 +12,10 @@ struct Sphere
 
 struct Light
 {
-	glm::vec3 center;
-	const float radius = 0.2f;
-	glm::vec3 lightColor;
+	glm::vec3 position;
+	//const float radius = 0.2f;
+	glm::vec3 color;
+
 };
 
 struct Scene
