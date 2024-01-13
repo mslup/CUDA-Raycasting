@@ -31,6 +31,8 @@ void Application::run()
 	double previousTime = glfwGetTime();
 	double previousFpsTime = previousTime;
 
+	glfwSetInputMode(window->wndptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 	while (!glfwWindowShouldClose(window->wndptr))
 	{
 		window->processInput();

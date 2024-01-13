@@ -74,16 +74,39 @@ GLuint* Renderer::getImage()
 
 void Renderer::createScene()
 {
-	scene.spheres.push_back(Sphere{
+	std::vector<glm::vec3> colors;
+
+	colors.push_back(glm::vec3(0.0f / 255.0f, 18.0f / 255.0f, 25.0f / 255.0f));
+	colors.push_back(glm::vec3(0.0f / 255.0f, 95.0f / 255.0f, 115.0f / 255.0f));
+	colors.push_back(glm::vec3(10.0f / 255.0f, 147.0f / 255.0f, 150.0f / 255.0f));
+	colors.push_back(glm::vec3(148.0f / 255.0f, 210.0f / 255.0f, 189.0f / 255.0f));
+	colors.push_back(glm::vec3(233.0f / 255.0f, 216.0f / 255.0f, 166.0f / 255.0f));
+	colors.push_back(glm::vec3(238.0f / 255.0f, 155.0f / 255.0f, 0.0f / 255.0f));
+	colors.push_back(glm::vec3(202.0f / 255.0f, 103.0f / 255.0f, 2.0f / 255.0f));
+	colors.push_back(glm::vec3(187.0f / 255.0f, 62.0f / 255.0f, 3.0f / 255.0f));
+	colors.push_back(glm::vec3(174.0f / 255.0f, 32.0f / 255.0f, 18.0f / 255.0f));
+	colors.push_back(glm::vec3(155.0f / 255.0f, 34.0f / 255.0f, 38.0f / 255.0f));
+
+	/*scene.spheres.push_back(Sphere{
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		0.5f,
-		glm::vec3(1.0f, 0.0f, 0.0f)
-		});
-	scene.spheres.push_back(Sphere{
-		glm::vec3(0.0f, 0.0f, -1.0f),
-		0.25f,
-		glm::vec3(0.0f, 0.0f, 1.0f)
-		});
+		glm::vec3(0.8f, 0.3f, 1.0f)
+		});*/
+
+	//srand(time(NULL));
+
+	int n = 30;
+
+	for (int i = 0; i < n; i++)
+	{
+		scene.spheres.push_back(Sphere{
+			glm::vec3((float)rand() / RAND_MAX * 10.0f - 5.0f,
+					  (float)rand() / RAND_MAX * 10.0f - 5.0f,
+					  (float)rand() / RAND_MAX * 10.0f - 5.0f),
+			0.5f * (i % 3),
+			colors[(i % colors.size())]
+			});
+	}
 }
 
 GLuint Renderer::toRGBA(glm::vec4& color)
@@ -98,8 +121,11 @@ GLuint Renderer::toRGBA(glm::vec4& color)
 
 GLuint Renderer::rayGen(int i, int j, float deltaTime)
 {
-	glm::vec3 rayOrigin = camera->getOrthographicRayOrigins()[i * width + j];
+	glm::vec3 rayOrigin = camera->getRayOrigin(); //camera->getOrthographicRayOrigins()[i * width + j];
 	glm::vec3 rayDirection = camera->getRayDirections()[i * width + j];
+
+
+
 
 	int hitSphereIndex = -1;
 	Sphere closestSphere;
@@ -108,14 +134,14 @@ GLuint Renderer::rayGen(int i, int j, float deltaTime)
 
 	for (int k = 0; k < scene.spheres.size(); k++)
 	{
-		Sphere &sphere = scene.spheres[k];
+		Sphere& sphere = scene.spheres[k];
 
 		glm::vec3 origin = rayOrigin - sphere.center;
 		glm::vec3 direction = rayDirection;
 
 		float a = glm::dot(direction, direction);
 		float b = 2.0f * glm::dot(origin, direction);
-		float c = glm::dot(origin, origin) 
+		float c = glm::dot(origin, origin)
 			- sphere.radius * sphere.radius;
 
 		float delta = b * b - 4.0f * a * c;
@@ -124,7 +150,7 @@ GLuint Renderer::rayGen(int i, int j, float deltaTime)
 
 		float t = (-b - glm::sqrt(delta)) / (2.0f * a);
 
-		if (t> 0 && t < minT)
+		if (t > 0 && t < minT)
 		{
 			minT = t;
 			hitSphereIndex = k;
@@ -133,20 +159,38 @@ GLuint Renderer::rayGen(int i, int j, float deltaTime)
 	}
 
 	if (hitSphereIndex == -1)
-		return 0xb8a9a9ff;
+		return toRGBA(glm::vec4(skyColor, 1.0f));
 
-	//glm::vec3 hitPoint = rayOrigin + rayDirection * t;
+	glm::vec3 hitPoint = rayOrigin + rayDirection * minT;
 
 	glm::vec3 origin = rayOrigin - closestSphere.center;
 	glm::vec3 position = origin + rayDirection * minT;
 	glm::vec3 normal = glm::normalize(position);
 
-	glm::vec3 lightDir = glm::normalize(glm::vec3(0, 0, -1));
-	float lightIntensity = glm::max(glm::dot(normal, -lightDir), 0.0f);
+	float kDiffuse = 0.0f;
+	float kSpecular = 0.7f;
+	float kAmbient = 0.5f;
+	float kShininess = 50;
 
-	glm::vec3 sphereColor = closestSphere.albedo;
+	glm::vec3 lightPosition = glm::vec3(
+		0.0f, 
+		0.0f, 
+		0.0f
+	);
+	glm::vec3 lightDir = glm::normalize(lightPosition - hitPoint);
+	glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+	float cosNL = glm::max(0.0f, glm::dot(lightDir, normal));
+	glm::vec3 reflectionVector = glm::normalize(2.0f * cosNL * normal - lightDir);
+	glm::vec3 eyeVector = glm::normalize(camera->position - hitPoint);
+	float cosVR = glm::max(0.0f, glm::dot(reflectionVector, eyeVector));
 
-	return toRGBA(glm::vec4(sphereColor * lightIntensity, 1.0f));
+	//float lightIntensity = glm::max(glm::dot(normal, -lightDir), 0.0f);
+	glm::vec3 color = kAmbient * ambientColor + 
+		kDiffuse * cosNL * lightColor +
+		kSpecular * glm::pow(cosVR, kShininess) * lightColor;
+	color *= closestSphere.albedo;
+
+	return toRGBA(glm::vec4(glm::clamp(color, 0.0f, 1.0f), 1.0f));
 
 }
 

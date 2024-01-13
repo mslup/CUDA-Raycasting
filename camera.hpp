@@ -7,9 +7,12 @@
 class Camera
 {
 public:
-	Camera(int width, int height, float left = -1.0f, float right = 1.0f, float bottom = -1.0f, float top = 1.0f);
+	Camera(int width, int height, float fov = glm::radians(70.0), 
+		float nearPlane = 0.01, float farPlane = 100);
+		//float left = -1.0f, float right = 1.0f, float bottom = -1.0f, float top = 1.0f);
 
 	std::vector<glm::vec3>& getOrthographicRayOrigins();
+	glm::vec3& getRayOrigin() { return position; }
 	std::vector<glm::vec3>& getRayDirections();
 
 	void onResize(int width, int height);
@@ -26,7 +29,9 @@ private:
 	glm::vec3 forwardDirection, rightDirection, upDirection;
 	const glm::vec3 worldUpDirection = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	float left, right, bottom, top;
+	float fov, nearPlane, farPlane;
+
+	//float left, right, bottom, top;
 	int viewportWidth, viewportHeight;
 
 	void calculateProjMatrix();

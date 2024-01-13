@@ -20,6 +20,14 @@ private:
 
 	void createScene();
 
+	const glm::vec3 ambientColor{
+		1.0f, 1.0f, 1.0f
+	};
+	const glm::vec3 skyColor{ 
+		235.0f / 255.0f, 
+		255.0f / 255.0f, 
+		255.0f / 255.0f };
+
 	GLuint toRGBA(glm::vec4&);
 	GLuint rayGen(int i, int j, float);
 
