@@ -1,14 +1,12 @@
 #include "framework.h"
 
-class Window;
-
 class Application
 {
 public:
 	Application();
 	~Application();
 
-	constexpr static int WIDTH = 800;
+	constexpr static int WIDTH =  800;
 	constexpr static int HEIGHT = 800;
 
 	void run();
@@ -17,6 +15,8 @@ public:
 	void processKeyboard(int key);
 	void processMouse(glm::vec2 offset);
 
+	enum solutionModes {CPU, GPU};
+	solutionModes solutionMode = GPU;
 private:
 	Window* window;
 	Shader* shader;
@@ -25,7 +25,7 @@ private:
 	unsigned int texture;
 
 	double deltaTime;
-	bool freeCamera = true;
+	bool freeCamera = false;
 
 	void createTexture();
 	void createBuffers();
@@ -34,6 +34,6 @@ private:
 
 	void textureResizeStorage(int width, int height);
 
-	enum solutionModes {CPU, GPU};
-	solutionModes solutionMode = CPU;
+	bool pause = false;
+
 };

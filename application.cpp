@@ -6,7 +6,7 @@ Application::Application()
 {
 	window = new Window(this);
 	shader = new Shader("vertex.glsl", "fragment.glsl");
-	renderer = new Renderer(WIDTH, HEIGHT);
+	renderer = new Renderer(WIDTH, HEIGHT, this);
 
 	deltaTime = 0;
 }
@@ -31,8 +31,12 @@ void Application::run()
 	double previousTime = glfwGetTime();
 	double previousFpsTime = previousTime;
 
-	//glfwSetInputMode(window->wndptr, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-	glfwSetInputMode(window->wndptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	if (freeCamera)
+		glfwSetInputMode(window->wndptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	else
+		glfwSetInputMode(window->wndptr, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+	static bool firstFrame = true;
 
 	while (!glfwWindowShouldClose(window->wndptr))
 	{
@@ -63,6 +67,8 @@ void Application::run()
 
 		glfwSwapBuffers(window->wndptr);
 		glfwPollEvents();
+
+		//while (true);
 	}
 }
 
@@ -150,7 +156,7 @@ void Application::imGuiFrame(int fps)
 	ImGui::PushItemWidth(-ImGui::GetWindowWidth() * 0.45f);
 
 	static const char* items[] = { "CPU", "GPU" };
-	static int selectedItem = 0;
+	static int selectedItem = 1;
 
 	if (ImGui::Combo("Solution", &selectedItem, items, IM_ARRAYSIZE(items)))
 	{

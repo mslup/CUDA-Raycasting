@@ -1,9 +1,11 @@
 #include "framework.h"
 
+class Application;
+
 class Renderer
 {
 public:
-	Renderer(int width, int height);
+	Renderer(int width, int height, Application *parent);
 	~Renderer();
 
 	void resize(int width, int height);
@@ -18,6 +20,8 @@ public:
 
 	Scene scene;
 private:
+	Application* app;
+
 	struct HitPayload {
 		float hitDistance;
 		glm::vec3 hitPoint;
@@ -31,7 +35,9 @@ private:
 	};
 
 	Camera* camera;
-	GLuint* imageData;
+	unsigned int* imageData;
+
+	unsigned int* cudaImage;
 
 	float kDiffuse = 0.9f;
 	float kSpecular = 0.4f;

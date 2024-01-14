@@ -4,11 +4,14 @@
 #include <algorithm>
 #include <glm/gtx/string_cast.hpp>
 
-Renderer::Renderer(int width, int height)
+Renderer::Renderer(int width, int height, Application *parent)
 {
+	app = parent;
 	imageData = nullptr;
 
 	scene.create();
+
+	gpuErrchk(cudaMalloc(&cudaImage, width * height * sizeof(unsigned int)));
 
 	camera = new Camera(width, height);
 	resize(width, height);
@@ -18,6 +21,8 @@ Renderer::~Renderer()
 {
 	if (imageData != nullptr)
 		delete[] imageData;
+
+	gpuErrchk(cudaFree(cudaImage));
 }
 
 void Renderer::resize(int width, int height)
@@ -26,9 +31,14 @@ void Renderer::resize(int width, int height)
 	this->height = height;
 
 	if (imageData != nullptr)
+	{
 		delete[] imageData;
+		gpuErrchk(cudaFree(cudaImage));
+	}
 
-	imageData = new GLuint[width * height + 1];
+	imageData = new unsigned int[width * height];
+	gpuErrchk(cudaMalloc(&cudaImage, width * height * sizeof(unsigned int)));
+
 	camera->onResize(width, height);
 }
 
@@ -36,7 +46,7 @@ void Renderer::update(float deltaTime)
 {
 	static float time = glfwGetTime();
 
-	scene.spherePositions[0] = glm::vec3(
+	scene.lightPositions[0] = glm::vec3(
 		//(glfwGetTime() - time), 0.0f, 0.0f
 		2.5f * glm::sin(glfwGetTime()),
 		2.5f * glm::cos(glfwGetTime()),
@@ -46,29 +56,46 @@ void Renderer::update(float deltaTime)
 
 void Renderer::render()
 {
+	// todo: cache the ray directions
 	camera->calculateRayDirections();
 
-	srand(time(NULL));
+	// todo: make two functions renderCPU and renderGPU
+	if (app->solutionMode == app->CPU)
+	{
+		// todo: don't resize each time
+		std::vector<GLuint> horizontalIter;
+		std::vector<GLuint> verticalIter;
 
-	std::vector<GLuint> horizontalIter;
-	std::vector<GLuint> verticalIter;
+		horizontalIter.resize(width);
+		verticalIter.resize(height);
+		for (uint32_t i = 0; i < width; i++)
+			horizontalIter[i] = i;
+		for (uint32_t i = 0; i < height; i++)
+			verticalIter[i] = i;
 
-	horizontalIter.resize(width);
-	verticalIter.resize(height);
-	for (uint32_t i = 0; i < width; i++)
-		horizontalIter[i] = i;
-	for (uint32_t i = 0; i < height; i++)
-		verticalIter[i] = i;
+		std::for_each(std::execution::par, verticalIter.begin(), verticalIter.end(),
+			[this, horizontalIter](uint32_t i)
+			{
+				std::for_each(std::execution::par, horizontalIter.begin(), horizontalIter.end(),
+				[this, i](uint32_t j)
+					{
+						imageData[i * width + j] = toRGBA(rayGen(i, j));
+					});
+			});
+	}
+	else if (app->solutionMode == app->GPU)
+	{
+		const int max_threads = 1024;
+		int blocks_per_grid = (width * height + max_threads - 1) / max_threads;
 
-	std::for_each(std::execution::par, verticalIter.begin(), verticalIter.end(),
-		[this, horizontalIter](uint32_t i)
-		{
-			std::for_each(std::execution::par, horizontalIter.begin(), horizontalIter.end(),
-			[this, i](uint32_t j)
-				{
-					imageData[i * width + j] = toRGBA(rayGen(i, j));
-				});
-		});
+		int pixelsCount = width * height;
+		int size = pixelsCount * sizeof(unsigned int);
+		
+		callKernels(blocks_per_grid, max_threads, cudaImage, pixelsCount,
+			width, height);
+
+		gpuErrchk(cudaMemcpy(imageData, cudaImage, size, cudaMemcpyDeviceToHost));
+	}
 }
 
 GLuint* Renderer::getImage()

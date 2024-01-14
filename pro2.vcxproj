@@ -87,11 +87,13 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="main.cu" />
+    <CudaCompile Include="cuda.cu" />
+    <CudaCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application.hpp" />
     <ClInclude Include="camera.hpp" />
+    <ClInclude Include="cuda.cuh" />
     <ClInclude Include="dependencies\include\glad\glad.h" />
     <ClInclude Include="dependencies\include\ImGUI\imconfig.h" />
     <ClInclude Include="dependencies\include\ImGUI\imgui.h" />

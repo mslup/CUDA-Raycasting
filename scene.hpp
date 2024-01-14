@@ -61,8 +61,6 @@ struct Scene
 			lightColorPalette.push_back(glm::vec3(0.3f, 0.1f, 0.8f));
 		}
 
-		
-
 		spherePositions = new glm::vec3[sphereCount];
 		sphereRadii = new float[sphereCount];
 		sphereAlbedos = new glm::vec3[sphereCount];

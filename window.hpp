@@ -1,5 +1,7 @@
 #include "framework.h"
 
+class Application;
+
 class Window
 {
 public:
