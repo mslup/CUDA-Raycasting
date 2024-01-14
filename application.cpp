@@ -31,6 +31,7 @@ void Application::run()
 	double previousTime = glfwGetTime();
 	double previousFpsTime = previousTime;
 
+	//glfwSetInputMode(window->wndptr, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	glfwSetInputMode(window->wndptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	while (!glfwWindowShouldClose(window->wndptr))
@@ -150,7 +151,7 @@ void Application::imGuiFrame(int fps)
 
 	ImGui::Text("%d fps", fps);
 
-	//ImGui::DragFloat3("Camera pos", glm::value_ptr(renderer->camera->position), 0.01f, -0.5f, 0.5f);
+	ImGui::DragFloat3("Light", glm::value_ptr(renderer->scene.lights[0].position), 0.01f, -2.5f, 10.0f);
 
 	ImGui::End();
 }
@@ -168,5 +169,6 @@ void Application::processKeyboard(int key)
 
 void Application::processMouse(glm::vec2 offset)
 {
-	renderer->processMouse(offset, deltaTime);
+	if (freeCamera)
+		renderer->processMouse(offset, deltaTime);
 }

@@ -13,6 +13,7 @@ public:
 	GLuint* getImage();
 	int width, height;
 
+	Scene scene;
 private:
 	struct HitPayload {
 		float hitDistance;
@@ -27,28 +28,29 @@ private:
 	};
 
 	Camera* camera;
-	Scene scene;
 	GLuint* imageData;
 
 	void createScene();
 
-	float kDiffuse = 0.4f;
-	float kSpecular = 0.9f;
+	float kDiffuse = 0.9f;
+	float kSpecular = 0.4f;
 	float kAmbient = 0.2f;
-	float kShininess = 10;
+	float kShininess = 40;
 
 	const glm::vec3 ambientColor{
 		1.0f, 1.0f, 1.0f
 	};
 	const glm::vec3 skyColor{ 
-		0.0f / 255.0f, 18.0f / 255.0f, 25.0f / 255.0f };
+		0.0f / 255.0f, /*18*/0.0f / 255.0f, /*25*/0.0f / 255.0f };
 
 	GLuint toRGBA(glm::vec4&);
 
 	glm::vec4 rayGen(int i, int j, float);
 
 	// cast a ray and get hit information
-	HitPayload traceRay(const Ray& ray);
+	HitPayload traceRayFromPixel(const Ray& ray);
+	HitPayload traceRayFromHitpoint(const Ray& ray, float diff = 0.0f);
+	HitPayload lightHit(const Ray& ray, int lightIndex);
 	HitPayload closestHit(const Ray& ray, int sphereIndex, float hitDistance);
 	HitPayload miss(const Ray& ray);
 

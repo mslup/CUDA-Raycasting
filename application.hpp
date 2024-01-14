@@ -25,8 +25,7 @@ private:
 	unsigned int texture;
 
 	double deltaTime;
-
-	const glm::vec3 backColor = glm::vec3(65, 55, 46);
+	bool freeCamera = true;
 
 	void createTexture();
 	void createBuffers();
