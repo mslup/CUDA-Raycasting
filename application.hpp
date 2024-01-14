@@ -30,7 +30,10 @@ private:
 	void createTexture();
 	void createBuffers();
 	void imGuiFrame(int);
-	void renderScene();
+	void updateAndRenderScene();
 
 	void textureResizeStorage(int width, int height);
+
+	enum solutionModes {CPU, GPU};
+	solutionModes solutionMode = CPU;
 };

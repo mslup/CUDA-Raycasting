@@ -54,9 +54,8 @@ void Application::run()
 		glClearColor(0, 0, 0, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		renderScene();
+		updateAndRenderScene();
 
-		//calculate and render shit
 		imGuiFrame(fps);
 
 		ImGui::Render();
@@ -126,9 +125,10 @@ void Application::createTexture()
 	glActiveTexture(0);
 }
 
-void Application::renderScene()
+void Application::updateAndRenderScene()
 {
-	renderer->render(deltaTime);
+	renderer->update(deltaTime);
+	renderer->render();
 	glTextureSubImage2D(texture, 0, 0, 0,
 		renderer->width, renderer->height, GL_RGBA,
 		GL_UNSIGNED_INT_8_8_8_8, renderer->getImage());
@@ -149,9 +149,17 @@ void Application::imGuiFrame(int fps)
 
 	ImGui::PushItemWidth(-ImGui::GetWindowWidth() * 0.45f);
 
+	static const char* items[] = { "CPU", "GPU" };
+	static int selectedItem = 0;
+
+	if (ImGui::Combo("Solution", &selectedItem, items, IM_ARRAYSIZE(items)))
+	{
+		solutionMode = (solutionModes)selectedItem;
+	}
+
 	ImGui::Text("%d fps", fps);
 
-	ImGui::DragFloat3("Light", glm::value_ptr(renderer->scene.lights[0].position), 0.01f, -2.5f, 10.0f);
+	ImGui::DragFloat3("Light", glm::value_ptr(renderer->scene.lightPositions[0]), 0.01f, -2.5f, 10.0f);
 
 	ImGui::End();
 }

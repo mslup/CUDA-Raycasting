@@ -20,11 +20,6 @@ Renderer::~Renderer()
 		delete[] imageData;
 }
 
-void Renderer::createScene()
-{
-
-}
-
 void Renderer::resize(int width, int height)
 {
 	this->width = width;
@@ -37,7 +32,19 @@ void Renderer::resize(int width, int height)
 	camera->onResize(width, height);
 }
 
-void Renderer::render(float deltaTime)
+void Renderer::update(float deltaTime)
+{
+	static float time = glfwGetTime();
+
+	scene.spherePositions[0] = glm::vec3(
+		//(glfwGetTime() - time), 0.0f, 0.0f
+		2.5f * glm::sin(glfwGetTime()),
+		2.5f * glm::cos(glfwGetTime()),
+		1.5f * glm::sin(glfwGetTime())
+	);
+}
+
+void Renderer::render()
 {
 	camera->calculateRayDirections();
 
@@ -53,22 +60,13 @@ void Renderer::render(float deltaTime)
 	for (uint32_t i = 0; i < height; i++)
 		verticalIter[i] = i;
 
-	static float time = glfwGetTime();
-
-	scene.lights[0].position = glm::vec3(
-		//(glfwGetTime() - time), 0.0f, 0.0f
-		2.5f * glm::sin(glfwGetTime()),
-		2.5f * glm::cos(glfwGetTime()),
-		1.5f * glm::sin(glfwGetTime())
-	);//light.position;
-
 	std::for_each(std::execution::par, verticalIter.begin(), verticalIter.end(),
-		[this, deltaTime, horizontalIter](uint32_t i)
+		[this, horizontalIter](uint32_t i)
 		{
 			std::for_each(std::execution::par, horizontalIter.begin(), horizontalIter.end(),
-			[this, i, deltaTime](uint32_t j)
+			[this, i](uint32_t j)
 				{
-					imageData[i * width + j] = toRGBA(rayGen(i, j, deltaTime));
+					imageData[i * width + j] = toRGBA(rayGen(i, j));
 				});
 		});
 }
@@ -88,7 +86,7 @@ GLuint Renderer::toRGBA(glm::vec4& color)
 	return (r << 24) | (g << 16) | (b << 8) | a;
 }
 
-glm::vec4 Renderer::rayGen(int i, int j, float deltaTime)
+glm::vec4 Renderer::rayGen(int i, int j)
 {
 	Ray ray;
 
@@ -96,6 +94,7 @@ glm::vec4 Renderer::rayGen(int i, int j, float deltaTime)
 	ray.direction = camera->getRayDirections()[i * width + j];
 
 	HitPayload payload = traceRayFromPixel(ray);
+	int idx = payload.objectIndex;
 
 	// no sphere detected
 	if (payload.hitDistance < 0)
@@ -103,36 +102,35 @@ glm::vec4 Renderer::rayGen(int i, int j, float deltaTime)
 
 	// light source hit
 	if (payload.hitDistance == 0)
-		return glm::vec4(scene.lights[payload.sphereIndex].color, 1.0f);
+		return glm::vec4(scene.lightColors[idx], 1.0f);
 
-	const Sphere& sphere = scene.spheres[payload.sphereIndex];
-	glm::vec4 color = glm::vec4(kAmbient * ambientColor * sphere.albedo, 1.0f);
+	glm::vec4 color = glm::vec4(kAmbient * ambientColor * scene.sphereAlbedos[idx], 1.0f);
 
-	for (int i = 0; i < scene.lights.size(); i++)
+	// cast rays from hitpoint to light sources
+	for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++)
 	{
-		const Light& light = scene.lights[i];
-
 		Ray rayToLight;
 
 		// cast ray a bit away from the sphere so that the ray doesn't hit it
 		rayToLight.origin = payload.hitPoint + payload.normal * 1e-4f;
-		float distanceToLight = glm::length(light.position - payload.hitPoint);
-		rayToLight.direction = glm::normalize(light.position - payload.hitPoint);
+		// todo: double calculated length
+		float distanceToLight = glm::length(scene.lightPositions[lightIdx] - payload.hitPoint);
+		rayToLight.direction = glm::normalize(scene.lightPositions[lightIdx] - payload.hitPoint);
 
 		HitPayload payloadToLight = traceRayFromHitpoint(rayToLight, distanceToLight);
 
 		// no sphere hit on path to light
 		if (payloadToLight.hitDistance < 0)
-			color += phong(payload, light);
+			color += phong(payload, lightIdx);
 	}
 
 	return glm::clamp(color, 0.0f, 1.0f);
 }
 
-glm::vec4 Renderer::phong(HitPayload payload, Light light)
+glm::vec4 Renderer::phong(HitPayload payload, int lightIndex)
 {
-	glm::vec3 lightDir = glm::normalize(light.position - payload.hitPoint);
-	glm::vec3 lightColor = light.color;
+	glm::vec3 lightDir = glm::normalize(scene.lightPositions[lightIndex] - payload.hitPoint);
+	glm::vec3 lightColor = scene.lightColors[lightIndex];
 	float cosNL = glm::max(0.0f, glm::dot(lightDir, payload.normal));
 	glm::vec3 reflectionVector = glm::reflect(-lightDir, payload.normal);
 	glm::vec3 eyeVector = glm::normalize(camera->position - payload.hitPoint);
@@ -142,29 +140,29 @@ glm::vec4 Renderer::phong(HitPayload payload, Light light)
 		kDiffuse * cosNL * lightColor +
 		kSpecular * glm::pow(cosVR, kShininess) * lightColor;
 
-	Sphere& sphere = scene.spheres[payload.sphereIndex];
-	color *= sphere.albedo;
+	color *= scene.sphereAlbedos[payload.objectIndex];
 
 	return glm::vec4(color, 1.0f);
 }
 
+// todo: merge two traceray functions
 Renderer::HitPayload Renderer::traceRayFromPixel(const Ray& ray)
 {
 	int hitSphereIndex = -1;
 	int hitLightIndex = -1;
 	float hitDistance = FLT_MAX;
 
-	for (int k = 0; k < scene.spheres.size(); k++)
+	for (int k = 0; k < scene.sphereCount; k++)
 	{
-		Sphere& sphere = scene.spheres[k];
-
-		glm::vec3 origin = ray.origin - sphere.center;
+		glm::vec3 origin = ray.origin - scene.spherePositions[k];
 		glm::vec3 direction = ray.direction;
+
+		float radius = scene.sphereRadii[k];
 
 		float a = glm::dot(direction, direction);
 		float b = 2.0f * glm::dot(origin, direction);
 		float c = glm::dot(origin, origin)
-			- sphere.radius * sphere.radius;
+			- radius * radius;
 
 		float delta = b * b - 4.0f * a * c;
 		if (delta < 0)
@@ -179,11 +177,9 @@ Renderer::HitPayload Renderer::traceRayFromPixel(const Ray& ray)
 		}
 	}
 
-	for (int k = 0; k < scene.lights.size(); k++)
+	for (int k = 0; k < scene.lightCount; k++)
 	{
-		Light& light = scene.lights[k];
-
-		glm::vec3 origin = ray.origin - light.position;
+		glm::vec3 origin = ray.origin - scene.lightPositions[k];
 		glm::vec3 direction = ray.direction;
 
 		float a = glm::dot(direction, direction);
@@ -219,17 +215,17 @@ Renderer::HitPayload Renderer::traceRayFromHitpoint(const Ray& ray, float diff)
 	int hitSphereIndex = -1;
 	float hitDistance = FLT_MAX;
 
-	for (int k = 0; k < scene.spheres.size(); k++)
+	for (int k = 0; k < scene.sphereCount; k++)
 	{
-		Sphere& sphere = scene.spheres[k];
-
-		glm::vec3 origin = ray.origin - sphere.center;
+		glm::vec3 origin = ray.origin - scene.spherePositions[k];
 		glm::vec3 direction = ray.direction;
+
+		float radius = scene.sphereRadii[k];
 
 		float a = glm::dot(direction, direction);
 		float b = 2.0f * glm::dot(origin, direction);
 		float c = glm::dot(origin, origin)
-			- sphere.radius * sphere.radius;
+			- radius * radius;
 
 		float delta = b * b - 4.0f * a * c;
 		if (delta < 0)
@@ -261,7 +257,7 @@ Renderer::HitPayload Renderer::lightHit(const Ray& ray, int lightIndex)
 {
 	HitPayload payload;
 	payload.hitDistance = 0.0f;
-	payload.sphereIndex = lightIndex;
+	payload.objectIndex = lightIndex;
 	return payload;
 }
 
@@ -270,12 +266,12 @@ Renderer::HitPayload Renderer::closestHit(const Ray& ray, int sphereIndex, float
 	HitPayload payload;
 
 	payload.hitDistance = hitDistance;
-	payload.sphereIndex = sphereIndex;
+	payload.objectIndex = sphereIndex;
 
-	Sphere& sphere = scene.spheres[sphereIndex];
+	glm::vec3 sphereCenter = scene.spherePositions[sphereIndex];
 
 	payload.hitPoint = ray.origin + ray.direction * hitDistance;
-	payload.normal = glm::normalize(payload.hitPoint - sphere.center);
+	payload.normal = glm::normalize(payload.hitPoint - sphereCenter);
 
 	return payload;
 }

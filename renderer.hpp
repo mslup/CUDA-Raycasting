@@ -9,7 +9,10 @@ public:
 	void resize(int width, int height);
 	void processKeyboard(int key, float dTime);
 	void processMouse(glm::vec2 offset, float dTime);
-	void render(float deltaTime);
+
+	// todo: this should be another class's responsibility
+	void update(float deltaTime);
+	void render();
 	GLuint* getImage();
 	int width, height;
 
@@ -19,7 +22,7 @@ private:
 		float hitDistance;
 		glm::vec3 hitPoint;
 		glm::vec3 normal;
-		int sphereIndex;
+		int objectIndex;
 	};
 
 	struct Ray {
@@ -30,8 +33,6 @@ private:
 	Camera* camera;
 	GLuint* imageData;
 
-	void createScene();
-
 	float kDiffuse = 0.9f;
 	float kSpecular = 0.4f;
 	float kAmbient = 0.2f;
@@ -40,19 +41,18 @@ private:
 	const glm::vec3 ambientColor{
 		1.0f, 1.0f, 1.0f
 	};
-	const glm::vec3 skyColor{ 
-		0.0f / 255.0f, /*18*/0.0f / 255.0f, /*25*/0.0f / 255.0f };
+	const glm::vec3 skyColor{
+		0.0f, 0.0f, 0.0f };
 
 	GLuint toRGBA(glm::vec4&);
 
-	glm::vec4 rayGen(int i, int j, float);
-
+	glm::vec4 rayGen(int i, int j);
 	// cast a ray and get hit information
 	HitPayload traceRayFromPixel(const Ray& ray);
-	HitPayload traceRayFromHitpoint(const Ray& ray, float diff = 0.0f);
+	HitPayload traceRayFromHitpoint(const Ray& ray, float diff);
 	HitPayload lightHit(const Ray& ray, int lightIndex);
 	HitPayload closestHit(const Ray& ray, int sphereIndex, float hitDistance);
 	HitPayload miss(const Ray& ray);
 
-	glm::vec4 phong(HitPayload payload, Light light);
+	glm::vec4 phong(HitPayload payload, int lightIndex);
 };
