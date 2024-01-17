@@ -1,47 +1,58 @@
-#pragma once
-
-#include "framework.hpp"
-
-class Application;
-class Camera;
-struct Scene;
+#include "framework.h"
 
 class Renderer
 {
 public:
-	Renderer(int width, int height, Application *parent);
+	Renderer(int width, int height);
 	~Renderer();
 
 	void resize(int width, int height);
 	void processKeyboard(int key, float dTime);
 	void processMouse(glm::vec2 offset, float dTime);
-
-	// todo: this should be another class's responsibility
-	void update(float deltaTime);
-	void renderCPU();
-	void renderGPU();
+	void render(float deltaTime);
 	GLuint* getImage();
 	int width, height;
 
 	Scene scene;
 private:
-	Application* app;
+	struct HitPayload {
+		float hitDistance;
+		glm::vec3 hitPoint;
+		glm::vec3 normal;
+		int sphereIndex;
+	};
+
+	struct Ray {
+		glm::vec3 origin;
+		glm::vec3 direction;
+	};
+
 	Camera* camera;
+	GLuint* imageData;
 
-	unsigned int* imageData;
+	void createScene();
 
-	unsigned int* cudaImage;
-	glm::vec3* cudaRayDirections;
+	float kDiffuse = 0.9f;
+	float kSpecular = 0.4f;
+	float kAmbient = 0.2f;
+	float kShininess = 40;
 
-	glm::vec4 rayGen(int i, int j);
+	const glm::vec3 ambientColor{
+		1.0f, 1.0f, 1.0f
+	};
+	const glm::vec3 skyColor{ 
+		0.0f / 255.0f, /*18*/0.0f / 255.0f, /*25*/0.0f / 255.0f };
+
+	GLuint toRGBA(glm::vec4&);
+
+	glm::vec4 rayGen(int i, int j, float);
+
 	// cast a ray and get hit information
 	HitPayload traceRayFromPixel(const Ray& ray);
-	HitPayload traceRayFromHitpoint(const Ray& ray, float diff);
+	HitPayload traceRayFromHitpoint(const Ray& ray, float diff = 0.0f);
 	HitPayload lightHit(const Ray& ray, int lightIndex);
 	HitPayload closestHit(const Ray& ray, int sphereIndex, float hitDistance);
 	HitPayload miss(const Ray& ray);
 
-	glm::vec4 phong(HitPayload payload, int lightIndex);
-
-	unsigned int toRGBA(glm::vec4&);
+	glm::vec4 phong(HitPayload payload, Light light);
 };

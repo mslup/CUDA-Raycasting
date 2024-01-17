@@ -1,148 +1,84 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CudaCompile Include="cuda.cu">
-      <Filter>Source</Filter>
-    </CudaCompile>
-    <CudaCompile Include="main.cpp">
-      <Filter>Source</Filter>
-    </CudaCompile>
+    <CudaCompile Include="main.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="framework.h" />
     <ClInclude Include="dependencies\include\ImGUI\imgui.h">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClInclude>
     <ClInclude Include="dependencies\include\ImGUI\imgui_impl_glfw.h">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClInclude>
     <ClInclude Include="dependencies\include\ImGUI\imgui_impl_opengl3.h">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClInclude>
     <ClInclude Include="dependencies\include\ImGUI\imgui_impl_opengl3_loader.h">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClInclude>
     <ClInclude Include="dependencies\include\ImGUI\imgui_internal.h">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClInclude>
     <ClInclude Include="dependencies\include\ImGUI\imgui_stdlib.h">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClInclude>
     <ClInclude Include="dependencies\include\ImGUI\imstb_rectpack.h">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClInclude>
     <ClInclude Include="dependencies\include\ImGUI\imstb_textedit.h">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClInclude>
     <ClInclude Include="dependencies\include\ImGUI\imstb_truetype.h">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClInclude>
-    <ClInclude Include="dependencies\include\ImGUI\imconfig.h">
-      <Filter>Include\ImGUI</Filter>
-    </ClInclude>
-    <ClInclude Include="application.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="framework.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="camera.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda.cuh">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ray.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="renderer.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="scene.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="shader.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="utils.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="window.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dependencies\include\glad\glad.h">
-      <Filter>Include\GLAD</Filter>
-    </ClInclude>
+    <ClInclude Include="application.hpp" />
+    <ClInclude Include="dependencies\include\glad\glad.h" />
+    <ClInclude Include="dependencies\include\ImGUI\imconfig.h" />
+    <ClInclude Include="window.hpp" />
+    <ClInclude Include="shader.hpp" />
+    <ClInclude Include="renderer.hpp" />
+    <ClInclude Include="camera.hpp" />
+    <ClInclude Include="scene.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Headers">
-      <UniqueIdentifier>{a27d8428-931e-4442-846b-9c88005c4e39}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source">
-      <UniqueIdentifier>{8d8dbd02-a8ac-4641-8f6f-1b8665fbb7f1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Include">
-      <UniqueIdentifier>{3543552b-8db0-4f72-aa1c-26a1818b7265}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Include\ImGUI">
+    <Filter Include="ImGUI">
       <UniqueIdentifier>{be24bf98-5ca1-42a2-8596-901802e22101}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Include\GLAD">
-      <UniqueIdentifier>{ba77cb46-a4a4-41b5-aae5-d467c310d3f5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{1ee1296a-0a96-4968-b8a9-6abbd32612ec}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\include\ImGUI\imgui.cpp">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="dependencies\include\ImGUI\imgui_demo.cpp">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="dependencies\include\ImGUI\imgui_draw.cpp">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="dependencies\include\ImGUI\imgui_impl_glfw.cpp">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="dependencies\include\ImGUI\imgui_impl_opengl3.cpp">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="dependencies\include\ImGUI\imgui_stdlib.cpp">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="dependencies\include\ImGUI\imgui_tables.cpp">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="dependencies\include\ImGUI\imgui_widgets.cpp">
-      <Filter>Include\ImGUI</Filter>
+      <Filter>ImGUI</Filter>
     </ClCompile>
-    <ClCompile Include="glad.c">
-      <Filter>Include\GLAD</Filter>
-    </ClCompile>
-    <ClCompile Include="application.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="camera.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="renderer.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="window.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="scene.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
+    <ClCompile Include="application.cpp" />
+    <ClCompile Include="glad.c" />
+    <ClCompile Include="window.cpp" />
+    <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="camera.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="vertex.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="fragment.glsl">
-      <Filter>Shaders</Filter>
-    </None>
+    <None Include="vertex.glsl" />
+    <None Include="fragment.glsl" />
   </ItemGroup>
 </Project>

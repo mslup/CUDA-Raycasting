@@ -1,4 +1,4 @@
-#include "window.hpp"
+#include "framework.h"
 
 Window::Window(Application *parent)
 {
@@ -62,28 +62,28 @@ Window::Window(Application *parent)
 			glViewport(0, 0, width, height);
 		});
 
-	//glfwSetCursorPosCallback(wndptr,
-	//	[](GLFWwindow* window, double xposIn, double yposIn)
-	//	{
-	//		Window& wnd = *(Window*)glfwGetWindowUserPointer(window);
+	glfwSetCursorPosCallback(wndptr,
+		[](GLFWwindow* window, double xposIn, double yposIn)
+		{
+			Window& wnd = *(Window*)glfwGetWindowUserPointer(window);
 
-	//		float xpos = static_cast<float>(xposIn);
-	//		float ypos = static_cast<float>(yposIn);
+			float xpos = static_cast<float>(xposIn);
+			float ypos = static_cast<float>(yposIn);
 
-	//		if (wnd.firstMouse)
-	//		{
-	//			wnd.lastX = xpos;
-	//			wnd.lastY = ypos;
-	//			wnd.firstMouse = false;
-	//		}
+			if (wnd.firstMouse)
+			{
+				wnd.lastX = xpos;
+				wnd.lastY = ypos;
+				wnd.firstMouse = false;
+			}
 
-	//		float xoffset = xpos - wnd.lastX;
-	//		float yoffset = wnd.lastY - ypos; // reversed since y-coordinates go from bottom to top
-	//		wnd.lastX = xpos;
-	//		wnd.lastY = ypos;
+			float xoffset = xpos - wnd.lastX;
+			float yoffset = wnd.lastY - ypos; // reversed since y-coordinates go from bottom to top
+			wnd.lastX = xpos;
+			wnd.lastY = ypos;
 
-	//		wnd.app->processMouse(glm::vec2(xoffset, yoffset));
-	//	});
+			wnd.app->processMouse(glm::vec2(xoffset, yoffset));
+		});
 }
 
 
