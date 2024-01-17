@@ -148,7 +148,7 @@ __device__ HitPayload traceRayFromHitpoint(Ray& ray, float diff, Scene scene)
 	return closestHit(ray, hitSphereIndex, hitDistance, scene);
 }
 
-__device__ glm::vec4 phong(HitPayload payload, int lightIndex, Scene scene, glm::vec3 cameraPos)
+__device__ glm::vec4 phong(HitPayload payload, int lightIndex, Scene scene, glm::vec3 cameraPos, float d)
 {
 	glm::vec3 lightDir = glm::normalize(scene.cudaLightPositions[lightIndex] - payload.hitPoint);
 	glm::vec3 lightColor = scene.cudaLightColors[lightIndex];
@@ -161,16 +161,18 @@ __device__ glm::vec4 phong(HitPayload payload, int lightIndex, Scene scene, glm:
 		scene.kDiffuse * cosNL * lightColor +
 		scene.kSpecular * glm::pow(cosVR, scene.kShininess) * lightColor;
 
-	color *= scene.cudaSphereAlbedos[payload.objectIndex];
+	// todo: factors in a different struct
+	float attenuation = 1.0;// / (1.0f + scene.linearAtt * d + scene.quadraticAtt * (d * d));
 
-	//return glm::vec4(1, 0, 0, 1);
+	color *= attenuation * scene.cudaSphereAlbedos[payload.objectIndex];
+
 
 	return glm::vec4(color, 1.0f);
 }
 
 // todo: scene in shared memory?
 __device__ glm::vec4 rayGen(int i, int j, glm::vec3 origin,
-	glm::vec3 direction, Scene scene, glm::vec3 cameraPos)
+	glm::vec3 direction, Scene scene, bool shadows)
 {
 	Ray ray;
 
@@ -193,22 +195,28 @@ __device__ glm::vec4 rayGen(int i, int j, glm::vec3 origin,
 	// cast rays from hitpoint to light sources
 	for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++)
 	{
-		// todo: make choice for shadows or no shadows
-		/*
-		Ray rayToLight;
+		if (!scene.cudaLightBools[lightIdx])
+			continue;
 
-		// cast ray a bit away from the sphere so that the ray doesn't hit it
-		rayToLight.origin = payload.hitPoint + payload.normal * 1e-4f;
-		// todo: avoid double calculating length
 		float distanceToLight = glm::length(scene.cudaLightPositions[lightIdx] - payload.hitPoint);
-		rayToLight.direction = glm::normalize(scene.cudaLightPositions[lightIdx] - payload.hitPoint);
 
-		HitPayload payloadToLight = traceRayFromHitpoint(rayToLight, distanceToLight, scene);
+		if (shadows)
+		{
+			Ray rayToLight;
 
-		// no sphere hit on path to light
-		if (payloadToLight.hitDistance < 0)
-		*/
-			color += phong(payload, lightIdx, scene, cameraPos);
+			// cast ray a bit away from the sphere so that the ray doesn't hit it
+			rayToLight.origin = payload.hitPoint + payload.normal * 1e-3f;
+			rayToLight.direction = glm::normalize(scene.cudaLightPositions[lightIdx] - payload.hitPoint);
+
+			HitPayload payloadToLight = traceRayFromHitpoint(rayToLight, distanceToLight, scene);
+
+			// no sphere hit on path to light
+			if (payloadToLight.hitDistance < 0)
+				color += phong(payload, lightIdx, scene, origin, distanceToLight);
+		}
+		else
+			color += phong(payload, lightIdx, scene, origin, distanceToLight);
+
 	}
 
 	return glm::clamp(color, 0.0f, 1.0f);
@@ -222,9 +230,6 @@ __device__ glm::vec3 getRayDirection(int i, int j, cudaArguments args)
 	};
 
 	coord = coord * 2.0f - 1.0f;
-
-	//glm::vec4 origin = inverseProjMatrix * glm::vec4(coord.x, coord.y, -2.0f, 1.0f);
-	//glm::vec3 rayOrigin = glm::vec3(inverseViewMatrix * origin);//glm::vec4(glm::normalize(glm::vec3(origin) / origin.w), 1));
 
 	glm::vec4 target = args.inverseProjMatrix * glm::vec4(coord.x, coord.y, 1.0f, 1.0f);
 	glm::vec3 rayDirection = glm::vec3(args.inverseViewMatrix * glm::vec4(glm::normalize(glm::vec3(target) / target.w), 0));
@@ -242,10 +247,9 @@ __global__ void rayTrace(cudaArguments args)
 
 	int k = x + y * args.width;
 
-	//GLuint res = toRGBA(glm::vec4(0.0f, 0.0f, (float)x / args.width, 1.0f));
-
 	GLuint res = toRGBA(rayGen(y, x,
-		args.rayOrigin, getRayDirection(y, x, args), args.scene, args.cameraPos));
+		args.rayOrigin, getRayDirection(y, x, args), 
+		args.scene, args.shadows));
 
 	args.cudaImage[k] = res;
 }

@@ -17,6 +17,7 @@ struct cudaArguments {
     const glm::vec3 cameraPos;
     const glm::mat4 inverseProjMatrix;
     const glm::mat4 inverseViewMatrix;
+    bool shadows;
 };
 
 __host__ void callKernels(dim3 blocks_per_grid, dim3 max_threads,

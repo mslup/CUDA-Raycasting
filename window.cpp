@@ -7,8 +7,8 @@ Window::Window(Application *parent)
 	width = Application::WIDTH;
 	height = Application::HEIGHT;
 
-	lastX = width / 2;
-	lastY = height / 2;
+	lastX = (float)width / 2;
+	lastY = (float)height / 2;
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -44,11 +44,6 @@ Window::Window(Application *parent)
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-	ImGui_ImplGlfw_InitForOpenGL(wndptr, true);
-	ImGui_ImplOpenGL3_Init();
-
-	//glEnable(GL_MULTISAMPLE);
-
 	glfwSetWindowUserPointer(wndptr, this);
 	glfwSetFramebufferSizeCallback(wndptr,
 		[](GLFWwindow* window, int width, int height)
@@ -62,28 +57,31 @@ Window::Window(Application *parent)
 			glViewport(0, 0, width, height);
 		});
 
-	//glfwSetCursorPosCallback(wndptr,
-	//	[](GLFWwindow* window, double xposIn, double yposIn)
-	//	{
-	//		Window& wnd = *(Window*)glfwGetWindowUserPointer(window);
+	glfwSetCursorPosCallback(wndptr,
+		[](GLFWwindow* window, double xposIn, double yposIn)
+		{
+			Window& wnd = *(Window*)glfwGetWindowUserPointer(window);
 
-	//		float xpos = static_cast<float>(xposIn);
-	//		float ypos = static_cast<float>(yposIn);
+			float xpos = static_cast<float>(xposIn);
+			float ypos = static_cast<float>(yposIn);
 
-	//		if (wnd.firstMouse)
-	//		{
-	//			wnd.lastX = xpos;
-	//			wnd.lastY = ypos;
-	//			wnd.firstMouse = false;
-	//		}
+			if (wnd.firstMouse)
+			{
+				wnd.lastX = xpos;
+				wnd.lastY = ypos;
+				wnd.firstMouse = false;
+			}
 
-	//		float xoffset = xpos - wnd.lastX;
-	//		float yoffset = wnd.lastY - ypos; // reversed since y-coordinates go from bottom to top
-	//		wnd.lastX = xpos;
-	//		wnd.lastY = ypos;
+			float xoffset = xpos - wnd.lastX;
+			float yoffset = wnd.lastY - ypos; // reversed since y-coordinates go from bottom to top
+			wnd.lastX = xpos;
+			wnd.lastY = ypos;
 
-	//		wnd.app->processMouse(glm::vec2(xoffset, yoffset));
-	//	});
+			wnd.app->processMouse(glm::vec2(xoffset, yoffset));
+		});
+
+	ImGui_ImplGlfw_InitForOpenGL(wndptr, true);
+	ImGui_ImplOpenGL3_Init();
 }
 
 

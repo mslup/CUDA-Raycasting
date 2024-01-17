@@ -1,10 +1,18 @@
 #include "camera.hpp"
 
+#include <execution>
+#include <algorithm>
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-Camera::Camera(int width, int height, float fov, float nearPlane, float farPlane)
+Camera::Camera(int width, int height,
+	std::vector<GLuint>& viewportHorizontalIter,
+	std::vector<GLuint>& viewportVerticalIter,
+	float fov, float nearPlane, float farPlane)
+	: viewportHorizontalIter{ viewportHorizontalIter },
+	viewportVerticalIter{ viewportVerticalIter }
 {
 	viewportWidth = width;
 	viewportHeight = height;
@@ -12,11 +20,6 @@ Camera::Camera(int width, int height, float fov, float nearPlane, float farPlane
 	this->fov = fov;
 	this->nearPlane = nearPlane;
 	this->farPlane = farPlane;
-
-	/*this->left = left;
-	this->right = right;
-	this->bottom = bottom;
-	this->top = top;*/
 
 	position = glm::vec3(0.0f, 0.0f, 30.0f);
 
@@ -43,15 +46,13 @@ void Camera::onResize(int width, int height)
 	delete[] rayDirections;
 	rayDirections = new glm::vec3[width * height];
 
-	//float aspectRatio = (float)width / (float)height;
-	//bottom = -aspectRatio;
-	//top = aspectRatio;
-
 	calculateProjMatrix();
 }
 
-void Camera::onUpdate(int key, float deltaTime)
+void Camera::onKeyboardUpdate(int key, float deltaTime)
 {
+	float rotationSpeed = speed / 3;
+
 	switch (key)
 	{
 	case GLFW_KEY_D:
@@ -72,9 +73,22 @@ void Camera::onUpdate(int key, float deltaTime)
 	case GLFW_KEY_W:
 		position += forwardDirection * speed * deltaTime;
 		break;
+	case GLFW_KEY_Q:
+		onMouseUpdate(glm::vec2(-rotationSpeed, 0), deltaTime);
+		break;
+	case GLFW_KEY_E:
+		onMouseUpdate(glm::vec2(rotationSpeed, 0), deltaTime);
+		break;
+	case GLFW_KEY_1:
+		onMouseUpdate(glm::vec2(0, rotationSpeed), deltaTime);
+		break;
+	case GLFW_KEY_3:
+		onMouseUpdate(glm::vec2(0, -rotationSpeed), deltaTime);
+		break;
 	}
 
 	calculateViewMatrix();
+	calculateRayDirections();
 }
 
 void Camera::onMouseUpdate(glm::vec2 offset, float deltaTime)
@@ -88,6 +102,9 @@ void Camera::onMouseUpdate(glm::vec2 offset, float deltaTime)
 	forwardDirection = glm::normalize(glm::rotate(q, forwardDirection));
 	rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));
 	upDirection = glm::normalize(glm::cross(rightDirection, forwardDirection));
+
+	calculateViewMatrix();
+	calculateRayDirections();
 }
 
 std::vector<glm::vec3>& Camera::getOrthographicRayOrigins()
@@ -102,57 +119,36 @@ glm::vec3* Camera::getRayDirections()
 
 void Camera::calculateRayDirections()
 {
-	//rayOrigins.resize(viewportWidth * viewportHeight);
-	//rayDirections.resize(viewportWidth * viewportHeight);
-
 	calculateViewMatrix();
 
-	for (int i = 0; i < viewportHeight; ++i)
-	{
-		for (int j = 0; j < viewportWidth; ++j)
+	std::for_each(std::execution::par, viewportVerticalIter.begin(), viewportVerticalIter.end(),
+		[this](uint32_t i)
 		{
-			glm::vec2 coord{
-				(float)j / viewportWidth,
-				(float)i / viewportHeight
-			};
+			std::for_each(std::execution::par, viewportHorizontalIter.begin(), viewportHorizontalIter.end(),
+			[this, i](uint32_t j)
+				{
+					glm::vec2 coord{
+						(float)j / viewportWidth,
+						(float)i / viewportHeight
+					};
 
-			coord = coord * 2.0f - 1.0f;
+					coord = coord * 2.0f - 1.0f;
 
-			//glm::vec4 origin = inverseProjMatrix * glm::vec4(coord.x, coord.y, -2.0f, 1.0f);
-			//glm::vec3 rayOrigin = glm::vec3(inverseViewMatrix * origin);//glm::vec4(glm::normalize(glm::vec3(origin) / origin.w), 1));
-
-			glm::vec4 target = inverseProjMatrix * glm::vec4(coord.x, coord.y, 1.0f, 1.0f);
-			glm::vec3 rayDirection = glm::vec3(inverseViewMatrix * glm::vec4(glm::normalize(glm::vec3(target) / target.w), 0));
-			//rayDirection = glm::normalize(rayDirection);
-
-			/*rayOrigins[i * viewportWidth + j] = rayOrigin;*/
-			rayDirections[i * viewportWidth + j] = rayDirection;
-		}
-	}
+					glm::vec4 target = inverseProjMatrix * glm::vec4(coord.x, coord.y, 1.0f, 1.0f);
+					glm::vec3 rayDirection = glm::vec3(inverseViewMatrix * glm::vec4(glm::normalize(glm::vec3(target) / target.w), 0));
+					rayDirections[i * viewportWidth + j] = rayDirection;
+				});
+		});
 }
 
 void Camera::calculateProjMatrix()
 {
-	/*projMatrix = glm::ortho(left, right, bottom, top);*/
 	projMatrix = glm::perspective(fov, (float)viewportWidth / (float)viewportHeight, nearPlane, farPlane);
 	inverseProjMatrix = glm::inverse(projMatrix);
 }
 
 void Camera::calculateViewMatrix()
 {
-	/*viewMatrix = glm::mat4(
-		glm::vec4(rightDirection, 0.0f),
-		glm::vec4(upDirection, 0.0f),
-		glm::vec4(forwardDirection, 0.0f),
-		glm::vec4(position, 1.0)
-	);*/
 	viewMatrix = glm::lookAt(position, position + forwardDirection, worldUpDirection);
 	inverseViewMatrix = glm::inverse(viewMatrix);
-	
-	/*inverseViewMatrix = glm::mat4(
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		position.x, position.y, position.z, 1.0f
-	);*/
 }

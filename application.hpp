@@ -21,7 +21,7 @@ public:
 	void processKeyboard(int key);
 	void processMouse(glm::vec2 offset);
 
-	enum solutionModes {CPU, GPU};
+	enum solutionModes {CPU, GPU, GPUshadows};
 	solutionModes solutionMode = GPU;
 private:
 	Window* window;

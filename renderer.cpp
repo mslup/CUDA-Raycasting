@@ -4,9 +4,8 @@
 #include <algorithm>
 #include <glm/gtx/string_cast.hpp>
 
-Renderer::Renderer(int width, int height, Application* parent)
+Renderer::Renderer(int width, int height)
 {
-	app = parent;
 	imageData = nullptr;
 
 	scene.create();
@@ -14,7 +13,7 @@ Renderer::Renderer(int width, int height, Application* parent)
 	gpuErrchk(cudaMalloc(&cudaImage, width * height * sizeof(unsigned int)));
 	gpuErrchk(cudaMalloc(&cudaRayDirections, width * height * sizeof(glm::vec3)));
 
-	camera = new Camera(width, height);
+	camera = new Camera(width, height, viewportHorizontalIter, viewportVerticalIter);
 	resize(width, height);
 }
 
@@ -46,6 +45,13 @@ void Renderer::resize(int width, int height)
 	gpuErrchk(cudaMalloc(&cudaImage, width * height * sizeof(unsigned int)));
 	gpuErrchk(cudaMalloc(&cudaRayDirections, width * height * sizeof(glm::vec3)));
 
+	viewportHorizontalIter.resize(width);
+	viewportVerticalIter.resize(height);
+	for (uint32_t i = 0; i < width; i++)
+		viewportHorizontalIter[i] = i;
+	for (uint32_t i = 0; i < height; i++)
+		viewportVerticalIter[i] = i;
+
 	camera->onResize(width, height);
 }
 
@@ -54,7 +60,6 @@ void Renderer::update(float deltaTime)
 	static float time = glfwGetTime();
 
 	scene.lightPositions[0] = glm::vec3(
-		//(glfwGetTime() - time), 0.0f, 0.0f
 		2.5f * glm::sin(glfwGetTime()),
 		2.5f * glm::cos(glfwGetTime()),
 		1.5f * glm::sin(glfwGetTime())
@@ -63,33 +68,18 @@ void Renderer::update(float deltaTime)
 
 void Renderer::renderCPU()
 {
-	// todo: cache the ray directions
-	camera->calculateRayDirections();
-
-	// todo: don't resize each time
-	std::vector<GLuint> horizontalIter;
-	std::vector<GLuint> verticalIter;
-
-	horizontalIter.resize(width);
-	verticalIter.resize(height);
-	for (uint32_t i = 0; i < width; i++)
-		horizontalIter[i] = i;
-	for (uint32_t i = 0; i < height; i++)
-		verticalIter[i] = i;
-
-	std::for_each(std::execution::par, verticalIter.begin(), verticalIter.end(),
-		[this, horizontalIter](uint32_t i)
+	std::for_each(std::execution::par, viewportVerticalIter.begin(), viewportVerticalIter.end(),
+		[this](uint32_t i)
 		{
-			std::for_each(std::execution::par, horizontalIter.begin(), horizontalIter.end(),
+			std::for_each(std::execution::par, viewportHorizontalIter.begin(), viewportHorizontalIter.end(),
 			[this, i](uint32_t j)
 				{
 					imageData[i * width + j] = toRGBA(rayGen(i, j));
 				});
 		});
-
 }
 
-void Renderer::renderGPU()
+void Renderer::renderGPU(bool shadows)
 {
 	int pixelsCount = width * height;
 	int size = pixelsCount * sizeof(unsigned int);
@@ -101,18 +91,14 @@ void Renderer::renderGPU()
 	dim3 blocks(width / tx + 1, height / ty + 1);
 	dim3 threads(tx, ty);
 	
-	// todo: temp - cuda probably should calculate ray directions
-	gpuErrchk(cudaMemcpy(cudaRayDirections,
-		camera->getRayDirections(),
-		vecSize, cudaMemcpyHostToDevice));
-	
 	cudaArguments args{
 		cudaImage, width, height, scene, 
 		camera->getRayOrigin(),
 		cudaRayDirections,
 		camera->getRayOrigin(),
 		camera->getInverseProjMatrix(),
-		camera->getInverseViewMatrix()
+		camera->getInverseViewMatrix(),
+		shadows
 	};
 
 	callKernels(blocks, threads, args);
@@ -128,8 +114,7 @@ GLuint* Renderer::getImage()
 glm::vec4 Renderer::rayGen(int i, int j)
 {
 	Ray ray;
-
-	ray.origin = camera->getRayOrigin(); //camera->getOrthographicRayOrigins()[i * width + j];
+	ray.origin = camera->getRayOrigin(); 
 	ray.direction = camera->getRayDirections()[i * width + j];
 
 	HitPayload payload = traceRayFromPixel(ray);
@@ -148,11 +133,13 @@ glm::vec4 Renderer::rayGen(int i, int j)
 	// cast rays from hitpoint to light sources
 	for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++)
 	{
+		if (!scene.lightBools[lightIdx])
+			continue;
+
 		Ray rayToLight;
 
 		// cast ray a bit away from the sphere so that the ray doesn't hit it
 		rayToLight.origin = payload.hitPoint + payload.normal * 1e-4f;
-		// todo: double calculated length
 		float distanceToLight = glm::length(scene.lightPositions[lightIdx] - payload.hitPoint);
 		rayToLight.direction = glm::normalize(scene.lightPositions[lightIdx] - payload.hitPoint);
 
@@ -224,7 +211,7 @@ HitPayload Renderer::traceRayFromPixel(const Ray& ray)
 		float a = glm::dot(direction, direction);
 		float b = 2.0f * glm::dot(origin, direction);
 		float c = glm::dot(origin, origin)
-			- 0.1f * 0.1f;
+			- scene.lightRadius * scene.lightRadius;
 
 		float delta = b * b - 4.0f * a * c;
 		if (delta < 0)
@@ -317,7 +304,7 @@ HitPayload Renderer::closestHit(const Ray& ray, int sphereIndex, float hitDistan
 
 void Renderer::processKeyboard(int key, float deltaTime)
 {
-	camera->onUpdate(key, deltaTime);
+	camera->onKeyboardUpdate(key, deltaTime);
 }
 
 void Renderer::processMouse(glm::vec2 offset, float deltaTime)

@@ -9,7 +9,7 @@ struct Scene;
 class Renderer
 {
 public:
-	Renderer(int width, int height, Application *parent);
+	Renderer(int width, int height);
 	~Renderer();
 
 	void resize(int width, int height);
@@ -19,17 +19,18 @@ public:
 	// todo: this should be another class's responsibility
 	void update(float deltaTime);
 	void renderCPU();
-	void renderGPU();
+	void renderGPU(bool shadows);
 	GLuint* getImage();
 	int width, height;
 
 	Scene scene;
 private:
-	Application* app;
 	Camera* camera;
 
-	unsigned int* imageData;
+	std::vector<GLuint> viewportHorizontalIter;
+	std::vector<GLuint> viewportVerticalIter;
 
+	unsigned int* imageData;
 	unsigned int* cudaImage;
 	glm::vec3* cudaRayDirections;
 

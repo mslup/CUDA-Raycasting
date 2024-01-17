@@ -7,7 +7,9 @@
 class Camera
 {
 public:
-	Camera(int width, int height, float fov = glm::radians(50.0), 
+	Camera(int width, int height, 
+		std::vector<GLuint>&, std::vector<GLuint>&,
+		float fov = glm::radians(50.0),
 		float nearPlane = 0.01, float farPlane = 100);
 		//float left = -1.0f, float right = 1.0f, float bottom = -1.0f, float top = 1.0f);
 
@@ -16,7 +18,7 @@ public:
 	glm::vec3* getRayDirections();
 
 	void onResize(int width, int height);
-	void onUpdate(int key, float deltaTime);
+	void onKeyboardUpdate(int key, float deltaTime);
 	void onMouseUpdate(glm::vec2 offset, float deltaTime);
 
 	glm::vec3 position;
@@ -32,6 +34,9 @@ private:
 
 	glm::vec3 forwardDirection, rightDirection, upDirection;
 	const glm::vec3 worldUpDirection = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	std::vector<GLuint>& viewportHorizontalIter;
+	std::vector<GLuint>& viewportVerticalIter;
 
 	float fov, nearPlane, farPlane;
 
