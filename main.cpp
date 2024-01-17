@@ -1,11 +1,10 @@
-﻿#include "framework.h"
+﻿#include "framework.hpp"
+//#include "cuda.cuh"
 
-#include "cuda.cuh"
-
-void callKernels(int blocks_per_grid, int max_threads, unsigned int *cudaImage, int pixelsCount,
-    int width, int height)
+__host__ void callKernels(dim3 blocks_per_grid, dim3 max_threads, cudaArguments args)
 {
-    doThingsKernel << <blocks_per_grid, max_threads >> > (pixelsCount, cudaImage, width, height);
+    // todo: check if callable from renderer because my god
+    rayTrace << <blocks_per_grid, max_threads >> > (args);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 }

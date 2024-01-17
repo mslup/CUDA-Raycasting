@@ -1,4 +1,4 @@
-#include "framework.h"
+#include "camera.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -27,6 +27,8 @@ Camera::Camera(int width, int height, float fov, float nearPlane, float farPlane
 	rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));
 	upDirection = glm::normalize(glm::cross(rightDirection, forwardDirection));
 
+	rayDirections = new glm::vec3[width * height];
+
 	calculateProjMatrix();
 	calculateViewMatrix();
 
@@ -40,6 +42,9 @@ void Camera::onResize(int width, int height)
 
 	viewportWidth = width;
 	viewportHeight = height;
+
+	delete[] rayDirections;
+	rayDirections = new glm::vec3[width * height];
 
 	//float aspectRatio = (float)width / (float)height;
 	//bottom = -aspectRatio;
@@ -93,7 +98,7 @@ std::vector<glm::vec3>& Camera::getOrthographicRayOrigins()
 	return rayOrigins;
 }
 
-std::vector<glm::vec3>& Camera::getRayDirections()
+glm::vec3* Camera::getRayDirections()
 {
 	return rayDirections;
 }
@@ -101,7 +106,7 @@ std::vector<glm::vec3>& Camera::getRayDirections()
 void Camera::calculateRayDirections()
 {
 	//rayOrigins.resize(viewportWidth * viewportHeight);
-	rayDirections.resize(viewportWidth * viewportHeight);
+	//rayDirections.resize(viewportWidth * viewportHeight);
 
 	calculateViewMatrix();
 
@@ -122,7 +127,6 @@ void Camera::calculateRayDirections()
 			glm::vec4 target = inverseProjMatrix * glm::vec4(coord.x, coord.y, 1.0f, 1.0f);
 			glm::vec3 rayDirection = glm::vec3(inverseViewMatrix * glm::vec4(glm::normalize(glm::vec3(target) / target.w), 0));
 			//rayDirection = glm::normalize(rayDirection);
-
 
 			/*rayOrigins[i * viewportWidth + j] = rayOrigin;*/
 			rayDirections[i * viewportWidth + j] = rayDirection;

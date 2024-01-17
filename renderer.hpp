@@ -1,6 +1,10 @@
-#include "framework.h"
+#pragma once
+
+#include "framework.hpp"
 
 class Application;
+class Camera;
+struct Scene;
 
 class Renderer
 {
@@ -14,43 +18,20 @@ public:
 
 	// todo: this should be another class's responsibility
 	void update(float deltaTime);
-	void render();
+	void renderCPU();
+	void renderGPU();
 	GLuint* getImage();
 	int width, height;
 
 	Scene scene;
 private:
 	Application* app;
-
-	struct HitPayload {
-		float hitDistance;
-		glm::vec3 hitPoint;
-		glm::vec3 normal;
-		int objectIndex;
-	};
-
-	struct Ray {
-		glm::vec3 origin;
-		glm::vec3 direction;
-	};
-
 	Camera* camera;
+
 	unsigned int* imageData;
 
 	unsigned int* cudaImage;
-
-	float kDiffuse = 0.9f;
-	float kSpecular = 0.4f;
-	float kAmbient = 0.2f;
-	float kShininess = 40;
-
-	const glm::vec3 ambientColor{
-		1.0f, 1.0f, 1.0f
-	};
-	const glm::vec3 skyColor{
-		0.0f, 0.0f, 0.0f };
-
-	GLuint toRGBA(glm::vec4&);
+	glm::vec3* cudaRayDirections;
 
 	glm::vec4 rayGen(int i, int j);
 	// cast a ray and get hit information
@@ -61,4 +42,6 @@ private:
 	HitPayload miss(const Ray& ray);
 
 	glm::vec4 phong(HitPayload payload, int lightIndex);
+
+	unsigned int toRGBA(glm::vec4&);
 };

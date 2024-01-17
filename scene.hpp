@@ -1,7 +1,13 @@
+#pragma once
+
+#include "framework.hpp"
+
 #include <vector>
 #include <glm/glm.hpp>
 
-#pragma once
+#ifndef GPU_ERRCHK
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+#endif
 
 struct Sphere
 {
@@ -22,22 +28,44 @@ struct Scene
 	//std::vector<Sphere> spheres;
 	//std::vector<Light> lights;
 
+	// todo: those pointers are const
+
 	glm::vec3* spherePositions;
-	float* sphereRadii;
 	glm::vec3* sphereAlbedos;
+	float* sphereRadii;
 
 	glm::vec3* lightPositions;
-	const float lightRadius = 0.2f;
 	glm::vec3* lightColors;
+	const float lightRadius = 0.2f;
+
+	// todo: idk, dry, maybe do sth like SceneGPU and SceneCPU?
+	glm::vec3* cudaSpherePositions;
+	glm::vec3* cudaSphereAlbedos;
+	float* cudaSphereRadii;
+
+	glm::vec3* cudaLightPositions;
+	glm::vec3* cudaLightColors;
 
 	const int sphereCount = 15;
 	const int lightCount = 10;
+
+	const glm::vec3 ambientColor{
+		1.0f, 1.0f, 1.0f
+	};
+	const glm::vec3 skyColor{
+		0.0f, 0.0f, 0.0f };
+
+	const float kDiffuse = 0.9f;
+	const float kSpecular = 0.4f;
+	const float kAmbient = 0.2f;
+	const float kShininess = 40;
 
 	void create()
 	{
 		static std::vector<glm::vec3> colorPalette;
 		static std::vector<glm::vec3> lightColorPalette;
 		{
+			colorPalette.push_back(glm::vec3(155.0f / 255.0f, 34.0f / 255.0f, 38.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(0.0f / 255.0f, 18.0f / 255.0f, 25.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(0.0f / 255.0f, 95.0f / 255.0f, 115.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(10.0f / 255.0f, 147.0f / 255.0f, 150.0f / 255.0f));
@@ -47,7 +75,6 @@ struct Scene
 			colorPalette.push_back(glm::vec3(202.0f / 255.0f, 103.0f / 255.0f, 2.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(187.0f / 255.0f, 62.0f / 255.0f, 3.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(174.0f / 255.0f, 32.0f / 255.0f, 18.0f / 255.0f));
-			colorPalette.push_back(glm::vec3(155.0f / 255.0f, 34.0f / 255.0f, 38.0f / 255.0f));
 
 			lightColorPalette.push_back(glm::vec3(1.0f, 1.0f, 1.0f));
 			lightColorPalette.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
@@ -82,11 +109,42 @@ struct Scene
 		for (int i = 0; i < lightCount; i++)
 		{
 			lightPositions[i] = glm::vec3(
-					5.0f * (float)rand() / RAND_MAX - 2.5f,
-					5.0f * (float)rand() / RAND_MAX - 2.5f,
-					5.0f * (float)rand() / RAND_MAX - 2.5f);
+				5.0f * (float)rand() / RAND_MAX - 2.5f,
+				5.0f * (float)rand() / RAND_MAX - 2.5f,
+				5.0f * (float)rand() / RAND_MAX - 2.5f);
 			lightColors[i] = lightColorPalette[i % lightColorPalette.size()];
 		}
+
+		size_t sphereVec3ArrSize = sphereCount * sizeof(glm::vec3);
+		size_t sphereFloatArrSize = sphereCount * sizeof(float);
+		size_t lightVec3ArrSize = lightCount * sizeof(glm::vec3);
+
+		gpuErrchk(cudaMalloc(&cudaSpherePositions, sphereVec3ArrSize));
+		gpuErrchk(cudaMalloc(&cudaSphereAlbedos, sphereVec3ArrSize));
+		gpuErrchk(cudaMalloc(&cudaSphereRadii, sphereFloatArrSize));
+		gpuErrchk(cudaMalloc(&cudaLightPositions, lightVec3ArrSize));
+		gpuErrchk(cudaMalloc(&cudaLightColors, lightVec3ArrSize));
+
+		gpuErrchk(cudaMemcpy(cudaSpherePositions, spherePositions, sphereVec3ArrSize, cudaMemcpyHostToDevice));
+		gpuErrchk(cudaMemcpy(cudaSphereAlbedos, sphereAlbedos, sphereVec3ArrSize, cudaMemcpyHostToDevice));
+		gpuErrchk(cudaMemcpy(cudaSphereRadii, sphereRadii, sphereFloatArrSize, cudaMemcpyHostToDevice));
+		gpuErrchk(cudaMemcpy(cudaLightPositions, lightPositions, lightVec3ArrSize, cudaMemcpyHostToDevice));
+		gpuErrchk(cudaMemcpy(cudaLightColors, lightColors, lightVec3ArrSize, cudaMemcpyHostToDevice));
 	}
+	void free()
+	{
+		delete[] spherePositions;
+		delete[] sphereRadii;
+		delete[] sphereAlbedos;
+		delete[] lightPositions;
+		delete[] lightColors;
+
+		gpuErrchk(cudaFree(cudaSpherePositions));
+		gpuErrchk(cudaFree(cudaSphereAlbedos));
+		gpuErrchk(cudaFree(cudaSphereRadii));
+		gpuErrchk(cudaFree(cudaLightPositions));
+		gpuErrchk(cudaFree(cudaLightColors));
+	}
+
 
 };

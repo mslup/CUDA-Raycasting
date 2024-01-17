@@ -1,17 +1,25 @@
-#include "framework.h"
+#ifndef _CUDA_CUH
+#define _CUDA_CUH
 
+#include "framework.hpp"
+#include "scene.hpp"
 #include <stdio.h>
 
-__global__ void doThingsKernel(int pixelsCount, unsigned int* image, int width, int height)
-{
-	int k = threadIdx.x + blockIdx.x * blockDim.x;
+//struct Scene;
 
-	if (k >= pixelsCount)
-		return;
+struct cudaArguments {
+    unsigned int* cudaImage;
+    const int width;
+    const int height;
+    const struct Scene scene;
+    const glm::vec3 rayOrigin;
+    const glm::vec3* rayDirections;
+    const glm::vec3 cameraPos;
+};
 
-	int y = k / width;
-	int x = k % width;
+__host__ void callKernels(dim3 blocks_per_grid, dim3 max_threads,
+    cudaArguments args);
 
-	GLuint res = 0x000000ff | ((int)(y * 255.0 / height) << 8);
-	image[k] = res;
-}
+__global__ void rayTrace(cudaArguments args);
+
+#endif

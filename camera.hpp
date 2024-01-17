@@ -1,8 +1,8 @@
-// https://github.com/TheCherno/RayTracing/blob/master/RayTracing/src/Camera.h
-
 #pragma once
 
-#include "framework.h"
+// https://github.com/TheCherno/RayTracing/blob/master/RayTracing/src/Camera.h
+
+#include "framework.hpp"
 
 class Camera
 {
@@ -13,7 +13,7 @@ public:
 
 	std::vector<glm::vec3>& getOrthographicRayOrigins();
 	glm::vec3& getRayOrigin() { return position; }
-	std::vector<glm::vec3>& getRayDirections();
+	glm::vec3* getRayDirections();
 
 	void onResize(int width, int height);
 	void onUpdate(int key, float deltaTime);
@@ -43,5 +43,5 @@ private:
 	glm::mat4 inverseViewMatrix;
 
 	std::vector<glm::vec3> rayOrigins;
-	std::vector<glm::vec3> rayDirections;
+	glm::vec3* rayDirections;
 };

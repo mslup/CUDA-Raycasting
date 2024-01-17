@@ -1,4 +1,6 @@
-#include "framework.h"
+#pragma once
+
+#include "framework.hpp"
 
 class Application;
 

@@ -1,4 +1,10 @@
-#include "framework.h"
+#pragma once
+
+#include "framework.hpp"
+
+class Window;
+class Shader;
+class Renderer;
 
 class Application
 {

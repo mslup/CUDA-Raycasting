@@ -1,4 +1,4 @@
-#include "framework.h"
+#include "application.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -134,7 +134,11 @@ void Application::createTexture()
 void Application::updateAndRenderScene()
 {
 	renderer->update(deltaTime);
-	renderer->render();
+	if (solutionMode == CPU)
+		renderer->renderCPU();
+	else
+		renderer->renderGPU();
+
 	glTextureSubImage2D(texture, 0, 0, 0,
 		renderer->width, renderer->height, GL_RGBA,
 		GL_UNSIGNED_INT_8_8_8_8, renderer->getImage());
