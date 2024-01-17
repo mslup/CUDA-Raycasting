@@ -1,14 +1,18 @@
-#include "framework.h"
+#include "renderer.hpp"
 
 #include <execution>
 #include <algorithm>
 #include <glm/gtx/string_cast.hpp>
 
-Renderer::Renderer(int width, int height)
+Renderer::Renderer(int width, int height, Application* parent)
 {
+	app = parent;
 	imageData = nullptr;
 
 	scene.create();
+
+	gpuErrchk(cudaMalloc(&cudaImage, width * height * sizeof(unsigned int)));
+	gpuErrchk(cudaMalloc(&cudaRayDirections, width * height * sizeof(glm::vec3)));
 
 	camera = new Camera(width, height);
 	resize(width, height);
@@ -16,13 +20,13 @@ Renderer::Renderer(int width, int height)
 
 Renderer::~Renderer()
 {
+	scene.free();
+
 	if (imageData != nullptr)
 		delete[] imageData;
-}
 
-void Renderer::createScene()
-{
-
+	gpuErrchk(cudaFree(cudaImage));
+	gpuErrchk(cudaFree(cudaRayDirections));
 }
 
 void Renderer::resize(int width, int height)
@@ -31,18 +35,38 @@ void Renderer::resize(int width, int height)
 	this->height = height;
 
 	if (imageData != nullptr)
+	{
 		delete[] imageData;
+		gpuErrchk(cudaFree(cudaImage));
+	}
 
-	imageData = new GLuint[width * height + 1];
+	gpuErrchk(cudaFree(cudaRayDirections));
+
+	imageData = new unsigned int[width * height];
+	gpuErrchk(cudaMalloc(&cudaImage, width * height * sizeof(unsigned int)));
+	gpuErrchk(cudaMalloc(&cudaRayDirections, width * height * sizeof(glm::vec3)));
+
 	camera->onResize(width, height);
 }
 
-void Renderer::render(float deltaTime)
+void Renderer::update(float deltaTime)
 {
+	static float time = glfwGetTime();
+
+	scene.lightPositions[0] = glm::vec3(
+		//(glfwGetTime() - time), 0.0f, 0.0f
+		2.5f * glm::sin(glfwGetTime()),
+		2.5f * glm::cos(glfwGetTime()),
+		1.5f * glm::sin(glfwGetTime())
+	);
+}
+
+void Renderer::renderCPU()
+{
+	// todo: cache the ray directions
 	camera->calculateRayDirections();
 
-	srand(time(NULL));
-
+	// todo: don't resize each time
 	std::vector<GLuint> horizontalIter;
 	std::vector<GLuint> verticalIter;
 
@@ -53,24 +77,45 @@ void Renderer::render(float deltaTime)
 	for (uint32_t i = 0; i < height; i++)
 		verticalIter[i] = i;
 
-	static float time = glfwGetTime();
-
-	scene.lights[0].position = glm::vec3(
-		//(glfwGetTime() - time), 0.0f, 0.0f
-		2.5f * glm::sin(glfwGetTime()),
-		2.5f * glm::cos(glfwGetTime()),
-		1.5f * glm::sin(glfwGetTime())
-	);//light.position;
-
 	std::for_each(std::execution::par, verticalIter.begin(), verticalIter.end(),
-		[this, deltaTime, horizontalIter](uint32_t i)
+		[this, horizontalIter](uint32_t i)
 		{
 			std::for_each(std::execution::par, horizontalIter.begin(), horizontalIter.end(),
-			[this, i, deltaTime](uint32_t j)
+			[this, i](uint32_t j)
 				{
-					imageData[i * width + j] = toRGBA(rayGen(i, j, deltaTime));
+					imageData[i * width + j] = toRGBA(rayGen(i, j));
 				});
 		});
+
+}
+
+void Renderer::renderGPU()
+{
+	int pixelsCount = width * height;
+	int size = pixelsCount * sizeof(unsigned int);
+	size_t vecSize = pixelsCount * sizeof(glm::vec3);
+
+	int tx = 32;
+	int ty = 32;
+
+	dim3 blocks(width / tx + 1, height / ty + 1);
+	dim3 threads(tx, ty);
+	
+	// todo: temp - cuda probably should calculate ray directions
+	gpuErrchk(cudaMemcpy(cudaRayDirections,
+		camera->getRayDirections(),
+		vecSize, cudaMemcpyHostToDevice));
+	
+	cudaArguments args{
+		cudaImage, width, height, scene, 
+		camera->getRayOrigin(),
+		cudaRayDirections,
+		camera->getRayOrigin()
+	};
+
+	callKernels(blocks, threads, args);
+
+	gpuErrchk(cudaMemcpy(imageData, cudaImage, size, cudaMemcpyDeviceToHost));
 }
 
 GLuint* Renderer::getImage()
@@ -78,17 +123,7 @@ GLuint* Renderer::getImage()
 	return imageData;
 }
 
-GLuint Renderer::toRGBA(glm::vec4& color)
-{
-	unsigned char r = color.r * 255.0f;
-	unsigned char g = color.g * 255.0f;
-	unsigned char b = color.b * 255.0f;
-	unsigned char a = color.a * 255.0f;
-
-	return (r << 24) | (g << 16) | (b << 8) | a;
-}
-
-glm::vec4 Renderer::rayGen(int i, int j, float deltaTime)
+glm::vec4 Renderer::rayGen(int i, int j)
 {
 	Ray ray;
 
@@ -96,75 +131,75 @@ glm::vec4 Renderer::rayGen(int i, int j, float deltaTime)
 	ray.direction = camera->getRayDirections()[i * width + j];
 
 	HitPayload payload = traceRayFromPixel(ray);
+	int idx = payload.objectIndex;
 
 	// no sphere detected
 	if (payload.hitDistance < 0)
-		return glm::vec4(skyColor, 1.0f);
+		return glm::vec4(scene.skyColor, 1.0f);
 
 	// light source hit
 	if (payload.hitDistance == 0)
-		return glm::vec4(scene.lights[payload.sphereIndex].color, 1.0f);
+		return glm::vec4(scene.lightColors[idx], 1.0f);
 
-	const Sphere& sphere = scene.spheres[payload.sphereIndex];
-	glm::vec4 color = glm::vec4(kAmbient * ambientColor * sphere.albedo, 1.0f);
+	glm::vec4 color = glm::vec4(scene.kAmbient * scene.ambientColor * scene.sphereAlbedos[idx], 1.0f);
 
-	for (int i = 0; i < scene.lights.size(); i++)
+	// cast rays from hitpoint to light sources
+	for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++)
 	{
-		const Light& light = scene.lights[i];
-
 		Ray rayToLight;
 
 		// cast ray a bit away from the sphere so that the ray doesn't hit it
 		rayToLight.origin = payload.hitPoint + payload.normal * 1e-4f;
-		float distanceToLight = glm::length(light.position - payload.hitPoint);
-		rayToLight.direction = glm::normalize(light.position - payload.hitPoint);
+		// todo: double calculated length
+		float distanceToLight = glm::length(scene.lightPositions[lightIdx] - payload.hitPoint);
+		rayToLight.direction = glm::normalize(scene.lightPositions[lightIdx] - payload.hitPoint);
 
 		HitPayload payloadToLight = traceRayFromHitpoint(rayToLight, distanceToLight);
 
 		// no sphere hit on path to light
 		if (payloadToLight.hitDistance < 0)
-			color += phong(payload, light);
+			color += phong(payload, lightIdx);
 	}
 
 	return glm::clamp(color, 0.0f, 1.0f);
 }
 
-glm::vec4 Renderer::phong(HitPayload payload, Light light)
+glm::vec4 Renderer::phong(HitPayload payload, int lightIndex)
 {
-	glm::vec3 lightDir = glm::normalize(light.position - payload.hitPoint);
-	glm::vec3 lightColor = light.color;
+	glm::vec3 lightDir = glm::normalize(scene.lightPositions[lightIndex] - payload.hitPoint);
+	glm::vec3 lightColor = scene.lightColors[lightIndex];
 	float cosNL = glm::max(0.0f, glm::dot(lightDir, payload.normal));
 	glm::vec3 reflectionVector = glm::reflect(-lightDir, payload.normal);
 	glm::vec3 eyeVector = glm::normalize(camera->position - payload.hitPoint);
 	float cosVR = glm::max(0.0f, glm::dot(reflectionVector, eyeVector));
 
 	glm::vec3 color =
-		kDiffuse * cosNL * lightColor +
-		kSpecular * glm::pow(cosVR, kShininess) * lightColor;
+		scene.kDiffuse * cosNL * lightColor +
+		scene.kSpecular * glm::pow(cosVR, scene.kShininess) * lightColor;
 
-	Sphere& sphere = scene.spheres[payload.sphereIndex];
-	color *= sphere.albedo;
+	color *= scene.sphereAlbedos[payload.objectIndex];
 
 	return glm::vec4(color, 1.0f);
 }
 
-Renderer::HitPayload Renderer::traceRayFromPixel(const Ray& ray)
+// todo: merge two traceray functions
+HitPayload Renderer::traceRayFromPixel(const Ray& ray)
 {
 	int hitSphereIndex = -1;
 	int hitLightIndex = -1;
 	float hitDistance = FLT_MAX;
 
-	for (int k = 0; k < scene.spheres.size(); k++)
+	for (int k = 0; k < scene.sphereCount; k++)
 	{
-		Sphere& sphere = scene.spheres[k];
-
-		glm::vec3 origin = ray.origin - sphere.center;
+		glm::vec3 origin = ray.origin - scene.spherePositions[k];
 		glm::vec3 direction = ray.direction;
+
+		float radius = scene.sphereRadii[k];
 
 		float a = glm::dot(direction, direction);
 		float b = 2.0f * glm::dot(origin, direction);
 		float c = glm::dot(origin, origin)
-			- sphere.radius * sphere.radius;
+			- radius * radius;
 
 		float delta = b * b - 4.0f * a * c;
 		if (delta < 0)
@@ -179,11 +214,9 @@ Renderer::HitPayload Renderer::traceRayFromPixel(const Ray& ray)
 		}
 	}
 
-	for (int k = 0; k < scene.lights.size(); k++)
+	for (int k = 0; k < scene.lightCount; k++)
 	{
-		Light& light = scene.lights[k];
-
-		glm::vec3 origin = ray.origin - light.position;
+		glm::vec3 origin = ray.origin - scene.lightPositions[k];
 		glm::vec3 direction = ray.direction;
 
 		float a = glm::dot(direction, direction);
@@ -214,22 +247,22 @@ Renderer::HitPayload Renderer::traceRayFromPixel(const Ray& ray)
 	return closestHit(ray, hitSphereIndex, hitDistance);
 }
 
-Renderer::HitPayload Renderer::traceRayFromHitpoint(const Ray& ray, float diff)
+HitPayload Renderer::traceRayFromHitpoint(const Ray& ray, float diff)
 {
 	int hitSphereIndex = -1;
 	float hitDistance = FLT_MAX;
 
-	for (int k = 0; k < scene.spheres.size(); k++)
+	for (int k = 0; k < scene.sphereCount; k++)
 	{
-		Sphere& sphere = scene.spheres[k];
-
-		glm::vec3 origin = ray.origin - sphere.center;
+		glm::vec3 origin = ray.origin - scene.spherePositions[k];
 		glm::vec3 direction = ray.direction;
+
+		float radius = scene.sphereRadii[k];
 
 		float a = glm::dot(direction, direction);
 		float b = 2.0f * glm::dot(origin, direction);
 		float c = glm::dot(origin, origin)
-			- sphere.radius * sphere.radius;
+			- radius * radius;
 
 		float delta = b * b - 4.0f * a * c;
 		if (delta < 0)
@@ -250,32 +283,32 @@ Renderer::HitPayload Renderer::traceRayFromHitpoint(const Ray& ray, float diff)
 	return closestHit(ray, hitSphereIndex, hitDistance);
 }
 
-Renderer::HitPayload Renderer::miss(const Ray& ray)
+HitPayload Renderer::miss(const Ray& ray)
 {
 	HitPayload payload;
 	payload.hitDistance = -1.0f;
 	return payload;
 }
 
-Renderer::HitPayload Renderer::lightHit(const Ray& ray, int lightIndex)
+HitPayload Renderer::lightHit(const Ray& ray, int lightIndex)
 {
 	HitPayload payload;
 	payload.hitDistance = 0.0f;
-	payload.sphereIndex = lightIndex;
+	payload.objectIndex = lightIndex;
 	return payload;
 }
 
-Renderer::HitPayload Renderer::closestHit(const Ray& ray, int sphereIndex, float hitDistance)
+HitPayload Renderer::closestHit(const Ray& ray, int sphereIndex, float hitDistance)
 {
 	HitPayload payload;
 
 	payload.hitDistance = hitDistance;
-	payload.sphereIndex = sphereIndex;
+	payload.objectIndex = sphereIndex;
 
-	Sphere& sphere = scene.spheres[sphereIndex];
+	glm::vec3 sphereCenter = scene.spherePositions[sphereIndex];
 
 	payload.hitPoint = ray.origin + ray.direction * hitDistance;
-	payload.normal = glm::normalize(payload.hitPoint - sphere.center);
+	payload.normal = glm::normalize(payload.hitPoint - sphereCenter);
 
 	return payload;
 }
@@ -288,4 +321,13 @@ void Renderer::processKeyboard(int key, float deltaTime)
 void Renderer::processMouse(glm::vec2 offset, float deltaTime)
 {
 	camera->onMouseUpdate(offset, deltaTime);
+}
+
+unsigned int Renderer::toRGBA(glm::vec4& color) {
+	unsigned char r = color.r * 255.0f;
+	unsigned char g = color.g * 255.0f;
+	unsigned char b = color.b * 255.0f;
+	unsigned char a = color.a * 255.0f;
+
+	return (r << 24) | (g << 16) | (b << 8) | a;
 }

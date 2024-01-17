@@ -1,4 +1,4 @@
-#include "framework.h"
+#include "application.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -6,7 +6,7 @@ Application::Application()
 {
 	window = new Window(this);
 	shader = new Shader("vertex.glsl", "fragment.glsl");
-	renderer = new Renderer(WIDTH, HEIGHT);
+	renderer = new Renderer(WIDTH, HEIGHT, this);
 
 	deltaTime = 0;
 }
@@ -31,8 +31,12 @@ void Application::run()
 	double previousTime = glfwGetTime();
 	double previousFpsTime = previousTime;
 
-	//glfwSetInputMode(window->wndptr, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-	glfwSetInputMode(window->wndptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	if (freeCamera)
+		glfwSetInputMode(window->wndptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	else
+		glfwSetInputMode(window->wndptr, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+	static bool firstFrame = true;
 
 	while (!glfwWindowShouldClose(window->wndptr))
 	{
@@ -54,9 +58,8 @@ void Application::run()
 		glClearColor(0, 0, 0, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		renderScene();
+		updateAndRenderScene();
 
-		//calculate and render shit
 		imGuiFrame(fps);
 
 		ImGui::Render();
@@ -64,6 +67,8 @@ void Application::run()
 
 		glfwSwapBuffers(window->wndptr);
 		glfwPollEvents();
+
+		//while (true);
 	}
 }
 
@@ -126,9 +131,14 @@ void Application::createTexture()
 	glActiveTexture(0);
 }
 
-void Application::renderScene()
+void Application::updateAndRenderScene()
 {
-	renderer->render(deltaTime);
+	renderer->update(deltaTime);
+	if (solutionMode == CPU)
+		renderer->renderCPU();
+	else
+		renderer->renderGPU();
+
 	glTextureSubImage2D(texture, 0, 0, 0,
 		renderer->width, renderer->height, GL_RGBA,
 		GL_UNSIGNED_INT_8_8_8_8, renderer->getImage());
@@ -149,9 +159,17 @@ void Application::imGuiFrame(int fps)
 
 	ImGui::PushItemWidth(-ImGui::GetWindowWidth() * 0.45f);
 
+	static const char* items[] = { "CPU", "GPU" };
+	static int selectedItem = 1;
+
+	if (ImGui::Combo("Solution", &selectedItem, items, IM_ARRAYSIZE(items)))
+	{
+		solutionMode = (solutionModes)selectedItem;
+	}
+
 	ImGui::Text("%d fps", fps);
 
-	ImGui::DragFloat3("Light", glm::value_ptr(renderer->scene.lights[0].position), 0.01f, -2.5f, 10.0f);
+	ImGui::DragFloat3("Light", glm::value_ptr(renderer->scene.lightPositions[0]), 0.01f, -2.5f, 10.0f);
 
 	ImGui::End();
 }

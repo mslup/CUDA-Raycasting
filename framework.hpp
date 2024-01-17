@@ -19,14 +19,10 @@
 #include "ImGUI/imgui_impl_glfw.h"
 #include "ImGUI/imgui_impl_opengl3.h"
 
-#include "scene.hpp"
-#include "camera.hpp"
-#include "shader.hpp"
-#include "renderer.hpp"
-#include "application.hpp"
-#include "window.hpp"
-
+#ifndef GPU_ERRCHK 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+#endif
+
 inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort = true)
 {
 	if (code != cudaSuccess)
@@ -35,3 +31,17 @@ inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort =
 		if (abort) exit(code);
 	}
 }
+
+#include "utils.hpp"
+#include "ray.hpp"
+#include "scene.hpp"
+
+
+#include "cuda.cuh"
+#include "camera.hpp"
+#include "shader.hpp"
+#include "renderer.hpp"
+#include "window.hpp"
+#include "application.hpp"
+
+
