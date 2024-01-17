@@ -1,8 +1,4 @@
-#pragma once
-
-#include "framework.hpp"
-
-class Application;
+#include "framework.h"
 
 class Window
 {
