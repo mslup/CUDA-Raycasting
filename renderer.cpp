@@ -110,7 +110,9 @@ void Renderer::renderGPU()
 		cudaImage, width, height, scene, 
 		camera->getRayOrigin(),
 		cudaRayDirections,
-		camera->getRayOrigin()
+		camera->getRayOrigin(),
+		camera->getInverseProjMatrix(),
+		camera->getInverseViewMatrix()
 	};
 
 	callKernels(blocks, threads, args);

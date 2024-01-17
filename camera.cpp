@@ -18,10 +18,7 @@ Camera::Camera(int width, int height, float fov, float nearPlane, float farPlane
 	this->bottom = bottom;
 	this->top = top;*/
 
-	position = glm::vec3(0.0f, 0.0f, 6.0f);
-
-	speed = 3.0f;
-	rotationSpeed = 0.005f;
+	position = glm::vec3(0.0f, 0.0f, 30.0f);
 
 	forwardDirection = glm::vec3(0.0f, 0.0f, -1.0f);
 	rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));

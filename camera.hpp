@@ -7,7 +7,7 @@
 class Camera
 {
 public:
-	Camera(int width, int height, float fov = glm::radians(70.0), 
+	Camera(int width, int height, float fov = glm::radians(50.0), 
 		float nearPlane = 0.01, float farPlane = 100);
 		//float left = -1.0f, float right = 1.0f, float bottom = -1.0f, float top = 1.0f);
 
@@ -23,8 +23,12 @@ public:
 
 	void calculateRayDirections();
 
+	glm::mat4& getInverseProjMatrix() { return inverseProjMatrix; }
+	glm::mat4& getInverseViewMatrix() { return inverseViewMatrix; }
+
 private:
-	float speed, rotationSpeed;
+	const float speed = 15.0f;
+	const float rotationSpeed = 0.005f;
 
 	glm::vec3 forwardDirection, rightDirection, upDirection;
 	const glm::vec3 worldUpDirection = glm::vec3(0.0f, 1.0f, 0.0f);

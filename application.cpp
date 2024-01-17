@@ -171,7 +171,16 @@ void Application::imGuiFrame(int fps)
 
 	ImGui::DragFloat3("Light", glm::value_ptr(renderer->scene.lightPositions[0]), 0.01f, -2.5f, 10.0f);
 
+	ImGui::SliderFloat("Diffuse", &renderer->scene.kDiffuse, 0.0, 1.0);
+	ImGui::SliderFloat("Specular", &renderer->scene.kSpecular, 0.0, 1.0);
+	ImGui::SliderFloat("Shininess", &renderer->scene.kShininess, 0.0, 20.0);
+	ImGui::SliderFloat("Ambient", &renderer->scene.kAmbient, 0.0, 1.0);
+
+	ImGui::ColorPicker3("Sky color", glm::value_ptr(renderer->scene.skyColor));
+	ImGui::ColorPicker3("Ambient color", glm::value_ptr(renderer->scene.ambientColor));
+
 	ImGui::End();
+
 }
 
 void Application::textureResizeStorage(int width, int height)

@@ -25,6 +25,9 @@ struct Light
 
 struct Scene
 {
+	// todo: sliders for each light, sliders for material parameters
+	// todo: selectable sphere colors? :D
+
 	//std::vector<Sphere> spheres;
 	//std::vector<Light> lights;
 
@@ -46,27 +49,29 @@ struct Scene
 	glm::vec3* cudaLightPositions;
 	glm::vec3* cudaLightColors;
 
-	const int sphereCount = 15;
+	const int sphereCount = 300;
 	const int lightCount = 10;
 
-	const glm::vec3 ambientColor{
+	glm::vec3 ambientColor{
 		1.0f, 1.0f, 1.0f
 	};
-	const glm::vec3 skyColor{
+	glm::vec3 skyColor{
 		0.0f, 0.0f, 0.0f };
 
-	const float kDiffuse = 0.9f;
-	const float kSpecular = 0.4f;
-	const float kAmbient = 0.2f;
-	const float kShininess = 40;
+	float kDiffuse = 0.9f;
+	float kSpecular = 0.4f;
+	float kAmbient = 0.2f;
+	float kShininess = 40;
+
+	const float worldBorder = -20;
 
 	void create()
 	{
 		static std::vector<glm::vec3> colorPalette;
 		static std::vector<glm::vec3> lightColorPalette;
 		{
-			colorPalette.push_back(glm::vec3(0.5, 0.5, 0.5));
-			/*colorPalette.push_back(glm::vec3(155.0f / 255.0f, 34.0f / 255.0f, 38.0f / 255.0f));
+			//colorPalette.push_back(glm::vec3(0.5, 0.5, 0.5));
+			colorPalette.push_back(glm::vec3(155.0f / 255.0f, 34.0f / 255.0f, 38.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(0.0f / 255.0f, 18.0f / 255.0f, 25.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(0.0f / 255.0f, 95.0f / 255.0f, 115.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(10.0f / 255.0f, 147.0f / 255.0f, 150.0f / 255.0f));
@@ -75,7 +80,7 @@ struct Scene
 			colorPalette.push_back(glm::vec3(238.0f / 255.0f, 155.0f / 255.0f, 0.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(202.0f / 255.0f, 103.0f / 255.0f, 2.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(187.0f / 255.0f, 62.0f / 255.0f, 3.0f / 255.0f));
-			colorPalette.push_back(glm::vec3(174.0f / 255.0f, 32.0f / 255.0f, 18.0f / 255.0f));*/
+			colorPalette.push_back(glm::vec3(174.0f / 255.0f, 32.0f / 255.0f, 18.0f / 255.0f));
 
 			lightColorPalette.push_back(glm::vec3(1.0f, 1.0f, 1.0f));
 			lightColorPalette.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
@@ -100,9 +105,9 @@ struct Scene
 		for (int i = 0; i < sphereCount; i++)
 		{
 			spherePositions[i] = glm::vec3(
-				(float)rand() / RAND_MAX * 10.0f - 5.0f,
-				(float)rand() / RAND_MAX * 10.0f - 5.0f,
-				(float)rand() / RAND_MAX * 10.0f - 5.0f);
+				((float)rand() / RAND_MAX) * worldBorder * 2 - worldBorder,
+				((float)rand() / RAND_MAX) * worldBorder * 2 - worldBorder,
+				((float)rand() / RAND_MAX) * worldBorder * 2 - worldBorder);
 			sphereRadii[i] = 0.2f * (i % 5 + 1);
 			sphereAlbedos[i] = colorPalette[i % colorPalette.size()];
 		}
@@ -110,9 +115,9 @@ struct Scene
 		for (int i = 0; i < lightCount; i++)
 		{
 			lightPositions[i] = glm::vec3(
-				5.0f * (float)rand() / RAND_MAX - 2.5f,
-				5.0f * (float)rand() / RAND_MAX - 2.5f,
-				5.0f * (float)rand() / RAND_MAX - 2.5f);
+				((float)rand() / RAND_MAX) * worldBorder * 5 + worldBorder,
+				((float)rand() / RAND_MAX) * worldBorder * 5 + worldBorder,
+				((float)rand() / RAND_MAX) * worldBorder * 5 + worldBorder);
 			lightColors[i] = lightColorPalette[i % lightColorPalette.size()];
 		}
 

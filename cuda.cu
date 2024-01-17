@@ -79,7 +79,7 @@ __device__ HitPayload traceRayFromPixel(const Ray& ray, Scene scene)
 	}
 
 	for (int k = 0; k < scene.lightCount; k++)
-	{	
+	{
 		glm::vec3 origin = ray.origin - scene.cudaLightPositions[k];
 		glm::vec3 direction = ray.direction;
 
@@ -100,7 +100,7 @@ __device__ HitPayload traceRayFromPixel(const Ray& ray, Scene scene)
 			hitSphereIndex = -2;
 			hitLightIndex = k;
 		}
-		
+
 	}
 
 	if (hitSphereIndex == -1)
@@ -189,10 +189,12 @@ __device__ glm::vec4 rayGen(int i, int j, glm::vec3 origin,
 		return glm::vec4(scene.cudaLightColors[idx], 1.0f);
 
 	glm::vec4 color = glm::vec4(scene.kAmbient * scene.ambientColor * scene.cudaSphereAlbedos[idx], 1.0f);
-	
+
 	// cast rays from hitpoint to light sources
 	for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++)
 	{
+		// todo: make choice for shadows or no shadows
+		/*
 		Ray rayToLight;
 
 		// cast ray a bit away from the sphere so that the ray doesn't hit it
@@ -205,13 +207,29 @@ __device__ glm::vec4 rayGen(int i, int j, glm::vec3 origin,
 
 		// no sphere hit on path to light
 		if (payloadToLight.hitDistance < 0)
-		{
-			//printf("chuj mi w dupe\n");
+		*/
 			color += phong(payload, lightIdx, scene, cameraPos);
-		}
 	}
-	
+
 	return glm::clamp(color, 0.0f, 1.0f);
+}
+
+__device__ glm::vec3 getRayDirection(int i, int j, cudaArguments args)
+{
+	glm::vec2 coord{
+		(float)j / args.width,
+		(float)i / args.height
+	};
+
+	coord = coord * 2.0f - 1.0f;
+
+	//glm::vec4 origin = inverseProjMatrix * glm::vec4(coord.x, coord.y, -2.0f, 1.0f);
+	//glm::vec3 rayOrigin = glm::vec3(inverseViewMatrix * origin);//glm::vec4(glm::normalize(glm::vec3(origin) / origin.w), 1));
+
+	glm::vec4 target = args.inverseProjMatrix * glm::vec4(coord.x, coord.y, 1.0f, 1.0f);
+	glm::vec3 rayDirection = glm::vec3(args.inverseViewMatrix * glm::vec4(glm::normalize(glm::vec3(target) / target.w), 0));
+
+	return rayDirection;
 }
 
 __global__ void rayTrace(cudaArguments args)
@@ -225,9 +243,9 @@ __global__ void rayTrace(cudaArguments args)
 	int k = x + y * args.width;
 
 	//GLuint res = toRGBA(glm::vec4(0.0f, 0.0f, (float)x / args.width, 1.0f));
-	
-	GLuint res = toRGBA(rayGen(y, x, 
-		args.rayOrigin, args.rayDirections[k], args.scene, args.cameraPos));
-	
+
+	GLuint res = toRGBA(rayGen(y, x,
+		args.rayOrigin, getRayDirection(y, x, args), args.scene, args.cameraPos));
+
 	args.cudaImage[k] = res;
 }
