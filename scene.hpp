@@ -65,7 +65,8 @@ struct Scene
 		static std::vector<glm::vec3> colorPalette;
 		static std::vector<glm::vec3> lightColorPalette;
 		{
-			colorPalette.push_back(glm::vec3(155.0f / 255.0f, 34.0f / 255.0f, 38.0f / 255.0f));
+			colorPalette.push_back(glm::vec3(0.5, 0.5, 0.5));
+			/*colorPalette.push_back(glm::vec3(155.0f / 255.0f, 34.0f / 255.0f, 38.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(0.0f / 255.0f, 18.0f / 255.0f, 25.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(0.0f / 255.0f, 95.0f / 255.0f, 115.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(10.0f / 255.0f, 147.0f / 255.0f, 150.0f / 255.0f));
@@ -74,7 +75,7 @@ struct Scene
 			colorPalette.push_back(glm::vec3(238.0f / 255.0f, 155.0f / 255.0f, 0.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(202.0f / 255.0f, 103.0f / 255.0f, 2.0f / 255.0f));
 			colorPalette.push_back(glm::vec3(187.0f / 255.0f, 62.0f / 255.0f, 3.0f / 255.0f));
-			colorPalette.push_back(glm::vec3(174.0f / 255.0f, 32.0f / 255.0f, 18.0f / 255.0f));
+			colorPalette.push_back(glm::vec3(174.0f / 255.0f, 32.0f / 255.0f, 18.0f / 255.0f));*/
 
 			lightColorPalette.push_back(glm::vec3(1.0f, 1.0f, 1.0f));
 			lightColorPalette.push_back(glm::vec3(1.0f, 0.0f, 0.0f));

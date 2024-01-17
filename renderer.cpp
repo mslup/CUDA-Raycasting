@@ -12,7 +12,7 @@ Renderer::Renderer(int width, int height, Application* parent)
 	scene.create();
 
 	gpuErrchk(cudaMalloc(&cudaImage, width * height * sizeof(unsigned int)));
-	gpuErrchk(cudaMalloc(&cudaRayDirections, width * height * sizeof(unsigned int)));
+	gpuErrchk(cudaMalloc(&cudaRayDirections, width * height * sizeof(glm::vec3)));
 
 	camera = new Camera(width, height);
 	resize(width, height);

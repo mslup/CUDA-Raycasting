@@ -19,7 +19,7 @@ __device__ unsigned int toRGBA(glm::vec4& color)
 __device__ HitPayload miss(const Ray& ray)
 {
 	HitPayload payload;
-	//payload.hitDistance = -1.0f;
+	payload.hitDistance = -1.0f;
 	return payload;
 }
 
@@ -59,10 +59,6 @@ __device__ HitPayload traceRayFromPixel(const Ray& ray, Scene scene)
 		glm::vec3 direction = ray.direction;
 
 		float radius = scene.cudaSphereRadii[k];
-
-		/*if (threadIdx.x == 0)
-			PRINT_VEC3(direction);*/
-			//printf("%f", radius);
 
 		float a = glm::dot(direction, direction);
 		float b = 2.0f * glm::dot(origin, direction);
@@ -155,7 +151,7 @@ __device__ HitPayload traceRayFromHitpoint(Ray& ray, float diff, Scene scene)
 __device__ glm::vec4 phong(HitPayload payload, int lightIndex, Scene scene, glm::vec3 cameraPos)
 {
 	glm::vec3 lightDir = glm::normalize(scene.cudaLightPositions[lightIndex] - payload.hitPoint);
-	glm::vec3 lightColor = scene.lightColors[lightIndex];
+	glm::vec3 lightColor = scene.cudaLightColors[lightIndex];
 	float cosNL = glm::max(0.0f, glm::dot(lightDir, payload.normal));
 	glm::vec3 reflectionVector = glm::reflect(-lightDir, payload.normal);
 	glm::vec3 eyeVector = glm::normalize(cameraPos - payload.hitPoint);
@@ -166,6 +162,8 @@ __device__ glm::vec4 phong(HitPayload payload, int lightIndex, Scene scene, glm:
 		scene.kSpecular * glm::pow(cosVR, scene.kShininess) * lightColor;
 
 	color *= scene.cudaSphereAlbedos[payload.objectIndex];
+
+	//return glm::vec4(1, 0, 0, 1);
 
 	return glm::vec4(color, 1.0f);
 }
@@ -184,7 +182,7 @@ __device__ glm::vec4 rayGen(int i, int j, glm::vec3 origin,
 
 	// no sphere detected
 	if (payload.hitDistance < 0)
-		return glm::vec4(1, 0.5, 0.9, 1);//scene.skyColor, 1.0f);
+		return glm::vec4(scene.skyColor, 1.0f);
 
 	// light source hit
 	if (payload.hitDistance == 0)
@@ -192,8 +190,6 @@ __device__ glm::vec4 rayGen(int i, int j, glm::vec3 origin,
 
 	glm::vec4 color = glm::vec4(scene.kAmbient * scene.ambientColor * scene.cudaSphereAlbedos[idx], 1.0f);
 	
-	//PRINT_VEC4(color);
-
 	// cast rays from hitpoint to light sources
 	for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++)
 	{
@@ -209,7 +205,10 @@ __device__ glm::vec4 rayGen(int i, int j, glm::vec3 origin,
 
 		// no sphere hit on path to light
 		if (payloadToLight.hitDistance < 0)
+		{
+			//printf("chuj mi w dupe\n");
 			color += phong(payload, lightIdx, scene, cameraPos);
+		}
 	}
 	
 	return glm::clamp(color, 0.0f, 1.0f);
