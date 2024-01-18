@@ -62,6 +62,9 @@ public:
 	void drawImGui();
 
 private:
-	bool dirty;
+	bool dirtyLightPos = false;
+	bool dirtyLightCol = false;
+	bool dirtyLightBools = false;
+	bool dirtySphereCol = false;
 };
 

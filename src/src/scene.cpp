@@ -241,13 +241,4 @@ void Scene::drawImGui()
 		ImGui::PopStyleVar();
 
 	}
-	}
-				}
-			}
-
-			ImGui::EndTable();
-		}
-		ImGui::EndChild();
-		ImGui::PopStyleVar();
-	}
 }
