@@ -6,7 +6,7 @@
 Application::Application()
 {
 	window = new Window(this);
-	shader = new Shader("vertex.glsl", "fragment.glsl");
+	shader = new Shader("src/shaders/vertex.glsl", "src/shaders/fragment.glsl");
 	renderer = new Renderer(WIDTH, HEIGHT);
 
 	deltaTime = 0;

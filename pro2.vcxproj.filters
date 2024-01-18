@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ItemGroup>
-    <CudaCompile Include="cuda.cu">
+   <ItemGroup>
+    <CudaCompile Include="src\src\cuda.cu">
       <Filter>Source</Filter>
     </CudaCompile>
-    <CudaCompile Include="main.cpp">
+    <CudaCompile Include="src\src\main.cpp">
       <Filter>Source</Filter>
     </CudaCompile>
   </ItemGroup>
@@ -39,35 +39,35 @@
     <ClInclude Include="dependencies\include\ImGUI\imconfig.h">
       <Filter>Include\ImGUI</Filter>
     </ClInclude>
-    <ClInclude Include="application.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="framework.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="camera.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda.cuh">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ray.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="renderer.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="scene.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="shader.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="window.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="dependencies\include\glad\glad.h">
       <Filter>Include\GLAD</Filter>
+    </ClInclude>
+    <ClInclude Include="src\headers\application.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\headers\camera.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\headers\cuda.cuh">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\headers\framework.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\headers\ray.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\headers\renderer.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\headers\scene.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\headers\shader.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\headers\window.hpp">
+      <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -115,30 +115,30 @@
     <ClCompile Include="dependencies\include\ImGUI\imgui_widgets.cpp">
       <Filter>Include\ImGUI</Filter>
     </ClCompile>
-    <ClCompile Include="glad.c">
+    <ClCompile Include="src\src\glad.c">
       <Filter>Include\GLAD</Filter>
     </ClCompile>
-    <ClCompile Include="application.cpp">
+    <ClCompile Include="src\src\application.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="camera.cpp">
+    <ClCompile Include="src\src\camera.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="renderer.cpp">
+    <ClCompile Include="src\src\renderer.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="window.cpp">
+    <ClCompile Include="src\src\scene.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="scene.cpp">
+    <ClCompile Include="src\src\window.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="vertex.glsl">
+    <None Include="src\shaders\fragment.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="fragment.glsl">
+    <None Include="src\shaders\vertex.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

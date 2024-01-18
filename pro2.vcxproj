@@ -43,12 +43,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>F:\studia\semestr 5\gpu\pro2\dependencies\include;$(IncludePath)</IncludePath>
-    <LibraryPath>F:\studia\semestr 5\gpu\pro2\dependencies\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)dependencies\include;$(SolutionDir)src\headers;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)dependencies\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>F:\studia\semestr 5\gpu\pro2\dependencies\include;$(IncludePath)</IncludePath>
-    <LibraryPath>F:\studia\semestr 5\gpu\pro2\dependencies\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)dependencies\include;$(SolutionDir)src\headers;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)dependencies\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -87,13 +87,6 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="cuda.cu" />
-    <CudaCompile Include="main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="application.hpp" />
-    <ClInclude Include="camera.hpp" />
-    <ClInclude Include="cuda.cuh" />
     <ClInclude Include="dependencies\include\glad\glad.h" />
     <ClInclude Include="dependencies\include\ImGUI\imconfig.h" />
     <ClInclude Include="dependencies\include\ImGUI\imgui.h" />
@@ -105,16 +98,17 @@
     <ClInclude Include="dependencies\include\ImGUI\imstb_rectpack.h" />
     <ClInclude Include="dependencies\include\ImGUI\imstb_textedit.h" />
     <ClInclude Include="dependencies\include\ImGUI\imstb_truetype.h" />
-    <ClInclude Include="framework.hpp" />
-    <ClInclude Include="ray.hpp" />
-    <ClInclude Include="renderer.hpp" />
-    <ClInclude Include="scene.hpp" />
-    <ClInclude Include="shader.hpp" />
-    <ClInclude Include="window.hpp" />
+    <ClInclude Include="src\headers\application.hpp" />
+    <ClInclude Include="src\headers\camera.hpp" />
+    <ClInclude Include="src\headers\cuda.cuh" />
+    <ClInclude Include="src\headers\framework.hpp" />
+    <ClInclude Include="src\headers\ray.hpp" />
+    <ClInclude Include="src\headers\renderer.hpp" />
+    <ClInclude Include="src\headers\scene.hpp" />
+    <ClInclude Include="src\headers\shader.hpp" />
+    <ClInclude Include="src\headers\window.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="application.cpp" />
-    <ClCompile Include="camera.cpp" />
     <ClCompile Include="dependencies\include\ImGUI\imgui.cpp" />
     <ClCompile Include="dependencies\include\ImGUI\imgui_demo.cpp" />
     <ClCompile Include="dependencies\include\ImGUI\imgui_draw.cpp" />
@@ -123,14 +117,20 @@
     <ClCompile Include="dependencies\include\ImGUI\imgui_stdlib.cpp" />
     <ClCompile Include="dependencies\include\ImGUI\imgui_tables.cpp" />
     <ClCompile Include="dependencies\include\ImGUI\imgui_widgets.cpp" />
-    <ClCompile Include="glad.c" />
-    <ClCompile Include="renderer.cpp" />
-    <ClCompile Include="scene.cpp" />
-    <ClCompile Include="window.cpp" />
+    <ClCompile Include="src\src\application.cpp" />
+    <ClCompile Include="src\src\camera.cpp" />
+    <ClCompile Include="src\src\glad.c" />
+    <ClCompile Include="src\src\renderer.cpp" />
+    <ClCompile Include="src\src\scene.cpp" />
+    <ClCompile Include="src\src\window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="vertex.glsl" />
-    <None Include="fragment.glsl" />
+    <None Include="src\shaders\fragment.glsl" />
+    <None Include="src\shaders\vertex.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\src\cuda.cu" />
+    <CudaCompile Include="src\src\main.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
