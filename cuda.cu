@@ -46,7 +46,6 @@ __device__ HitPayload closestHit(const Ray& ray, int sphereIndex, float hitDista
 	return payload;
 }
 
-// todo: merge rayTrace functions
 __device__ HitPayload traceRayFromPixel(const Ray& ray, Scene scene)
 {
 	int hitSphereIndex = -1;
@@ -80,6 +79,9 @@ __device__ HitPayload traceRayFromPixel(const Ray& ray, Scene scene)
 
 	for (int k = 0; k < scene.lightCount; k++)
 	{
+		if (!scene.cudaLightBools[k])
+			continue;
+
 		glm::vec3 origin = ray.origin - scene.cudaLightPositions[k];
 		glm::vec3 direction = ray.direction;
 
@@ -158,19 +160,15 @@ __device__ glm::vec4 phong(HitPayload payload, int lightIndex, Scene scene, glm:
 	float cosVR = glm::max(0.0f, glm::dot(reflectionVector, eyeVector));
 
 	glm::vec3 color =
-		scene.kDiffuse * cosNL * lightColor +
-		scene.kSpecular * glm::pow(cosVR, scene.kShininess) * lightColor;
-
-	// todo: factors in a different struct
-	float attenuation = 1.0;// / (1.0f + scene.linearAtt * d + scene.quadraticAtt * (d * d));
-
+		scene.params.kDiffuse * cosNL * lightColor +
+		scene.params.kSpecular * glm::pow(cosVR, scene.params.kShininess) * lightColor;
+	
+	float attenuation = 1.0f / (1.0f + d * (scene.params.linearAtt + scene.params.quadraticAtt * d));
 	color *= attenuation * scene.cudaSphereAlbedos[payload.objectIndex];
-
 
 	return glm::vec4(color, 1.0f);
 }
 
-// todo: scene in shared memory?
 __device__ glm::vec4 rayGen(int i, int j, glm::vec3 origin,
 	glm::vec3 direction, Scene scene, bool shadows)
 {
@@ -184,13 +182,13 @@ __device__ glm::vec4 rayGen(int i, int j, glm::vec3 origin,
 
 	// no sphere detected
 	if (payload.hitDistance < 0)
-		return glm::vec4(scene.skyColor, 1.0f);
+		return glm::vec4(scene.params.skyColor, 1.0f);
 
 	// light source hit
 	if (payload.hitDistance == 0)
 		return glm::vec4(scene.cudaLightColors[idx], 1.0f);
 
-	glm::vec4 color = glm::vec4(scene.kAmbient * scene.ambientColor * scene.cudaSphereAlbedos[idx], 1.0f);
+	glm::vec4 color = glm::vec4(scene.params.kAmbient * scene.params.ambientColor * scene.cudaSphereAlbedos[idx], 1.0f);
 
 	// cast rays from hitpoint to light sources
 	for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++)

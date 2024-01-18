@@ -63,9 +63,6 @@
     <ClInclude Include="shader.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="utils.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="window.hpp">
       <Filter>Headers</Filter>
     </ClInclude>

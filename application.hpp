@@ -12,7 +12,7 @@ public:
 	Application();
 	~Application();
 
-	constexpr static int WIDTH =  800;
+	constexpr static int WIDTH =  1200;
 	constexpr static int HEIGHT = 800;
 
 	void run();

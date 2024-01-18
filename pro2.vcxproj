@@ -110,12 +110,10 @@
     <ClInclude Include="renderer.hpp" />
     <ClInclude Include="scene.hpp" />
     <ClInclude Include="shader.hpp" />
-    <ClInclude Include="utils.hpp" />
     <ClInclude Include="window.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="application.cpp" />
-    <ClCompile Include="application_imgui.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="dependencies\include\ImGUI\imgui.cpp" />
     <ClCompile Include="dependencies\include\ImGUI\imgui_demo.cpp" />
@@ -127,6 +125,7 @@
     <ClCompile Include="dependencies\include\ImGUI\imgui_widgets.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="scene.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>

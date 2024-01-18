@@ -9,9 +9,10 @@ class Camera
 public:
 	Camera(int width, int height, 
 		std::vector<GLuint>&, std::vector<GLuint>&,
+		glm::vec3 position = glm::vec3(-10.0f, 0.0f, 60.0f),
 		float fov = glm::radians(50.0),
-		float nearPlane = 0.01, float farPlane = 100);
-		//float left = -1.0f, float right = 1.0f, float bottom = -1.0f, float top = 1.0f);
+		float nearPlane = 0.01, 
+		float farPlane = 100);
 
 	std::vector<glm::vec3>& getOrthographicRayOrigins();
 	glm::vec3& getRayOrigin() { return position; }

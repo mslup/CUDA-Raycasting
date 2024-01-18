@@ -1,4 +1,5 @@
 #include "renderer.hpp"
+#include "cuda.cuh"
 
 #include <execution>
 #include <algorithm>
@@ -55,15 +56,9 @@ void Renderer::resize(int width, int height)
 	camera->onResize(width, height);
 }
 
-void Renderer::update(float deltaTime)
+void Renderer::notifyCamera()
 {
-	static float time = glfwGetTime();
-
-	scene.lightPositions[0] = glm::vec3(
-		2.5f * glm::sin(glfwGetTime()),
-		2.5f * glm::cos(glfwGetTime()),
-		1.5f * glm::sin(glfwGetTime())
-	);
+	camera->calculateRayDirections();
 }
 
 void Renderer::renderCPU()
@@ -122,38 +117,40 @@ glm::vec4 Renderer::rayGen(int i, int j)
 
 	// no sphere detected
 	if (payload.hitDistance < 0)
-		return glm::vec4(scene.skyColor, 1.0f);
+		return glm::vec4(scene.params.skyColor, 1.0f);
 
 	// light source hit
 	if (payload.hitDistance == 0)
 		return glm::vec4(scene.lightColors[idx], 1.0f);
 
-	glm::vec4 color = glm::vec4(scene.kAmbient * scene.ambientColor * scene.sphereAlbedos[idx], 1.0f);
+	glm::vec4 color = glm::vec4(scene.params.kAmbient 
+		* scene.params.ambientColor 
+		* scene.sphereAlbedos[idx], 1.0f);
 
 	// cast rays from hitpoint to light sources
 	for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++)
 	{
-		if (!scene.lightBools[lightIdx])
-			continue;
-
-		Ray rayToLight;
-
-		// cast ray a bit away from the sphere so that the ray doesn't hit it
-		rayToLight.origin = payload.hitPoint + payload.normal * 1e-4f;
 		float distanceToLight = glm::length(scene.lightPositions[lightIdx] - payload.hitPoint);
-		rayToLight.direction = glm::normalize(scene.lightPositions[lightIdx] - payload.hitPoint);
+		//if (!scene.lightBools[lightIdx])
+		//	continue;
 
-		HitPayload payloadToLight = traceRayFromHitpoint(rayToLight, distanceToLight);
+		//Ray rayToLight;
 
-		// no sphere hit on path to light
-		if (payloadToLight.hitDistance < 0)
-			color += phong(payload, lightIdx);
+		//// cast ray a bit away from the sphere so that the ray doesn't hit it
+		//rayToLight.origin = payload.hitPoint + payload.normal * 1e-4f;
+		//rayToLight.direction = glm::normalize(scene.lightPositions[lightIdx] - payload.hitPoint);
+
+		//HitPayload payloadToLight = traceRayFromHitpoint(rayToLight, distanceToLight);
+
+		//// no sphere hit on path to light
+		//if (payloadToLight.hitDistance < 0)
+			color += phong(payload, lightIdx, distanceToLight);
 	}
 
 	return glm::clamp(color, 0.0f, 1.0f);
 }
 
-glm::vec4 Renderer::phong(HitPayload payload, int lightIndex)
+glm::vec4 Renderer::phong(HitPayload payload, int lightIndex, float d)
 {
 	glm::vec3 lightDir = glm::normalize(scene.lightPositions[lightIndex] - payload.hitPoint);
 	glm::vec3 lightColor = scene.lightColors[lightIndex];
@@ -163,10 +160,11 @@ glm::vec4 Renderer::phong(HitPayload payload, int lightIndex)
 	float cosVR = glm::max(0.0f, glm::dot(reflectionVector, eyeVector));
 
 	glm::vec3 color =
-		scene.kDiffuse * cosNL * lightColor +
-		scene.kSpecular * glm::pow(cosVR, scene.kShininess) * lightColor;
+		scene.params.kDiffuse * cosNL * lightColor +
+		scene.params.kSpecular * glm::pow(cosVR, scene.params.kShininess) * lightColor;
 
-	color *= scene.sphereAlbedos[payload.objectIndex];
+	float attenuation = 1.0f / (1.0f + d * (scene.params.linearAtt + scene.params.quadraticAtt * d));
+	color *= attenuation * scene.sphereAlbedos[payload.objectIndex];
 
 	return glm::vec4(color, 1.0f);
 }

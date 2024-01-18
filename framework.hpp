@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include <iostream>
-#include <vector>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -20,6 +19,7 @@
 #include "ImGUI/imgui_impl_opengl3.h"
 
 #ifndef GPU_ERRCHK 
+#define GPU_ERRCHK
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 #endif
 
@@ -32,16 +32,5 @@ inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort =
 	}
 }
 
-#include "utils.hpp"
 #include "ray.hpp"
 #include "scene.hpp"
-
-
-#include "cuda.cuh"
-#include "camera.hpp"
-#include "shader.hpp"
-#include "renderer.hpp"
-#include "window.hpp"
-#include "application.hpp"
-
-

@@ -10,6 +10,7 @@
 Camera::Camera(int width, int height,
 	std::vector<GLuint>& viewportHorizontalIter,
 	std::vector<GLuint>& viewportVerticalIter,
+	glm::vec3 position,
 	float fov, float nearPlane, float farPlane)
 	: viewportHorizontalIter{ viewportHorizontalIter },
 	viewportVerticalIter{ viewportVerticalIter }
@@ -20,17 +21,13 @@ Camera::Camera(int width, int height,
 	this->fov = fov;
 	this->nearPlane = nearPlane;
 	this->farPlane = farPlane;
-
-	position = glm::vec3(0.0f, 0.0f, 30.0f);
+	this->position = position;
 
 	forwardDirection = glm::vec3(0.0f, 0.0f, -1.0f);
 	rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));
 	upDirection = glm::normalize(glm::cross(rightDirection, forwardDirection));
 
 	rayDirections = new glm::vec3[width * height];
-
-	calculateProjMatrix();
-	calculateViewMatrix();
 
 	calculateRayDirections();
 }
@@ -46,7 +43,7 @@ void Camera::onResize(int width, int height)
 	delete[] rayDirections;
 	rayDirections = new glm::vec3[width * height];
 
-	calculateProjMatrix();
+	calculateRayDirections();
 }
 
 void Camera::onKeyboardUpdate(int key, float deltaTime)
@@ -87,7 +84,6 @@ void Camera::onKeyboardUpdate(int key, float deltaTime)
 		break;
 	}
 
-	calculateViewMatrix();
 	calculateRayDirections();
 }
 
@@ -103,7 +99,6 @@ void Camera::onMouseUpdate(glm::vec2 offset, float deltaTime)
 	rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));
 	upDirection = glm::normalize(glm::cross(rightDirection, forwardDirection));
 
-	calculateViewMatrix();
 	calculateRayDirections();
 }
 
@@ -119,6 +114,7 @@ glm::vec3* Camera::getRayDirections()
 
 void Camera::calculateRayDirections()
 {
+	calculateProjMatrix();
 	calculateViewMatrix();
 
 	std::for_each(std::execution::par, viewportVerticalIter.begin(), viewportVerticalIter.end(),

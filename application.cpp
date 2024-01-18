@@ -1,4 +1,7 @@
 #include "application.hpp"
+#include "window.hpp"
+#include "shader.hpp"
+#include "renderer.hpp"
 
 Application::Application()
 {
@@ -62,9 +65,40 @@ void Application::run()
 
 		glfwSwapBuffers(window->wndptr);
 		glfwPollEvents();
-
-		//while (true);
 	}
+}
+
+void Application::imGuiFrame(int fps)
+{
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+
+	if (!ImGui::Begin("Menu", NULL, 0))
+	{
+		ImGui::End();
+		return;
+	}
+
+	ImGui::PushItemWidth(-ImGui::GetWindowWidth() * 0.45f);
+
+	static const char* items[] = { "CPU no shadows", 
+		"GPU no shadows", 
+		"GPU shadows" };
+	static int selectedItem = 1;
+
+	if (ImGui::Combo("Solution", &selectedItem, items, IM_ARRAYSIZE(items)))
+	{
+		solutionMode = (solutionModes)selectedItem;
+		renderer->notifyCamera();
+	}
+
+	ImGui::Text("%d fps", fps);
+
+	renderer->scene.drawImGui();
+
+	ImGui::End();
+
 }
 
 void Application::resize(int width, int height)
@@ -128,7 +162,7 @@ void Application::createTexture()
 
 void Application::updateAndRenderScene()
 {
-	renderer->update(deltaTime);
+	renderer->scene.updateScene(deltaTime);
 
 	if (solutionMode == CPU)
 		renderer->renderCPU();

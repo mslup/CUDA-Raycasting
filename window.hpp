@@ -2,7 +2,7 @@
 
 #include "framework.hpp"
 
-class Application;
+#include "application.hpp";
 
 class Window
 {
