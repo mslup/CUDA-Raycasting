@@ -109,22 +109,32 @@ void Scene::updateScene(float deltaTime)
 		params.worldBorder * glm::sin(glfwGetTime()) * glm::cos(glfwGetTime())
 	);
 
-	dirty = true;
+	dirtyLightPos = true;
 }
 
 void Scene::updateCuda()
 {
-	if (!dirty)
-		return;
+	if (dirtyLightPos)
+	{
+		gpuErrchk(cudaMemcpy(cudaLightPositions, lightPositions, lightCount * sizeof(glm::vec3), cudaMemcpyHostToDevice));
+		dirtyLightPos = false;
+	}
+	if (dirtyLightCol)
+	{
+		gpuErrchk(cudaMemcpy(cudaLightColors, lightColors, lightCount * sizeof(glm::vec3), cudaMemcpyHostToDevice));
+		dirtyLightCol = false;
+	}
+	if (dirtyLightBools)
+	{
+		gpuErrchk(cudaMemcpy(cudaLightBools, lightBools, lightCount * sizeof(bool), cudaMemcpyHostToDevice));
+		dirtyLightBools = false;
+	}
+	if (dirtySphereCol)
+	{
+		gpuErrchk(cudaMemcpy(cudaSphereAlbedos, sphereAlbedos, sphereCount * sizeof(glm::vec3), cudaMemcpyHostToDevice));
+		dirtySphereCol = false;
 
-	size_t lightVec3ArrSize = lightCount * sizeof(glm::vec3);
-	size_t lightBoolArrSize = lightCount * sizeof(bool);
-
-	gpuErrchk(cudaMemcpy(cudaLightPositions, lightPositions, lightVec3ArrSize, cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMemcpy(cudaLightColors, lightColors, lightVec3ArrSize, cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMemcpy(cudaLightBools, lightBools, lightBoolArrSize, cudaMemcpyHostToDevice));
-
-	dirty = false;
+	}
 }
 
 void Scene::drawImGui()
@@ -173,8 +183,7 @@ void Scene::drawImGui()
 	{
 		static int attenuationEnum = params.startAttIdx;
 
-		if (ImGui::DragInt("Attenuation", &attenuationEnum, 0.1f, 0, 12))
-			dirty = true;
+		ImGui::DragInt("Attenuation", &attenuationEnum, 0.1f, 0, 12);
 
 		params.linearAtt = params.linearAttValues[attenuationEnum];
 		params.quadraticAtt = params.quadraticAttValues[attenuationEnum];
@@ -183,19 +192,19 @@ void Scene::drawImGui()
 		{
 			for (int i = 0; i < lightCount; i++)
 				lightBools[i] = true;
-			dirty = true;
+			dirtyLightBools = true;
 		}
 		if (ImGui::Button("Turn all lights off", ImVec2(150, 0)))
 		{
 			for (int i = 0; i < lightCount; i++)
 				lightBools[i] = false;
-			dirty = true;
+			dirtyLightBools = true;
 		}
 
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-		ImGui::BeginChild("ChildR", ImVec2(0, 600), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeY, window_flags);
+		ImGui::BeginChild("Child1", ImVec2(0, 600), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeY, ImGuiWindowFlags_None);
 		if (ImGui::BeginMenuBar())
 		{
 			if (ImGui::BeginMenu("Menu"))
@@ -204,7 +213,7 @@ void Scene::drawImGui()
 			}
 			ImGui::EndMenuBar();
 		}
-		if (ImGui::BeginTable("split", 1, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings))
+		if (ImGui::BeginTable("split1", 1, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings))
 		{
 			for (int i = 0; i < lightCount; ++i)
 			{
@@ -215,14 +224,24 @@ void Scene::drawImGui()
 					float border = params.worldBorder;
 					ImGui::PushID(i);
 					if (ImGui::DragFloat3("Position", glm::value_ptr(lightPositions[i]), 0.1f, -border - 5, border + 5))
-						dirty = true;
+						dirtyLightPos = true;
 					if (ImGui::ColorEdit3("Color", glm::value_ptr(lightColors[i])))
-						dirty = true;
+						dirtyLightCol = true;
 
 					bool& on = lightBools[i];
 
 					if (ImGui::Checkbox(on ? "Turn off" : "Turn on", &on))
-						dirty = true;
+						dirtyLightBools = true;
+				}
+			}
+
+			ImGui::EndTable();
+		}
+		ImGui::EndChild();
+		ImGui::PopStyleVar();
+
+	}
+	}
 				}
 			}
 
